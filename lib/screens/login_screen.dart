@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -45,8 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
     try {
       await context.read<AuthProvider>().login(
             email: email,
@@ -60,17 +57,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ExceptionHandler.showErrorSnackBar(context, e);
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24),
@@ -81,14 +74,14 @@ class _LoginScreenState extends State<LoginScreen> {
               Icon(
                 Icons.account_balance_wallet_rounded,
                 size: 64,
-                color: AppColors.primary,
+                color: ThemeColors.getPrimary(context),
               ),
               SizedBox(height: 16),
               Text(
                 'PocketVision',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.primary,
+                  color: ThemeColors.getPrimary(context),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -102,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'Email',
-                  prefixIcon: Icon(Icons.email, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.email, color: ThemeColors.getTextTertiary(context)),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -111,13 +104,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 decoration: InputDecoration(
                   hintText: 'Mật khẩu',
-                  prefixIcon: Icon(Icons.lock, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.lock, color: ThemeColors.getTextTertiary(context)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                     onPressed: () {
                       setState(() {
@@ -134,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   return ElevatedButton(
                     onPressed: authProvider.isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -179,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Đăng ký ngay',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: ThemeColors.getPrimary(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

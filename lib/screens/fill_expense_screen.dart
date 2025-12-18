@@ -4,6 +4,7 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 
 class FillExpenseScreen extends StatefulWidget {
   const FillExpenseScreen({super.key});
@@ -119,18 +120,17 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Điền chi tiêu thông minh'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           TextButton(
             onPressed: _saveExpense,
             child: Text(
               'Lưu',
               style: TextStyle(
-                color: AppColors.primary,
+                color: ThemeColors.getPrimary(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -148,14 +148,14 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                    colors: [ThemeColors.getPrimary(context), ThemeColors.getPrimary(context).withOpacity(0.8)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: ThemeColors.getPrimary(context).withOpacity(0.3),
                       blurRadius: 12,
                       offset: Offset(0, 4),
                     ),
@@ -195,9 +195,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Amount Input
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -211,7 +211,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         if (_amountController.text.isNotEmpty)
@@ -228,11 +228,11 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                         suffixText: 'VND',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                         ),
                       ),
                       validator: (value) {
@@ -266,14 +266,13 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                     : Icon(Icons.auto_fix_high),
                 label: Text(_isFilling ? 'Đang phân tích...' : 'Điền tự động bằng AI'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 4,
-                  shadowColor: AppColors.primary.withOpacity(0.3),
+                  shadowColor: ThemeColors.getPrimary(context).withOpacity(0.3),
                 ),
               ),
               SizedBox(height: 24),
@@ -281,9 +280,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Store Name
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -297,7 +296,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         if (_storeNameController.text.isNotEmpty)
@@ -311,11 +310,11 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                         hintText: 'Ví dụ: VinMart, Circle K...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                         ),
                       ),
                     ),
@@ -327,9 +326,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Category Selection
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -343,7 +342,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         if (_selectedCategoryId != null)
@@ -358,11 +357,11 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                           items: categoryProvider.categories.map((category) {
@@ -387,9 +386,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Payment Method
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -403,7 +402,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         if (_selectedPaymentMethod != null)
@@ -416,11 +415,11 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                         ),
                       ),
                       items: ['Tiền mặt', 'Thẻ tín dụng', 'Chuyển khoản', 'Ví điện tử']
@@ -443,9 +442,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Date Selection
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -456,7 +455,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: ThemeColors.getTextPrimary(context),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -488,9 +487,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Note
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -504,7 +503,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         if (_noteController.text.isNotEmpty)
@@ -519,11 +518,11 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                         hintText: 'Thêm ghi chú nếu cần...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                         ),
                       ),
                     ),
@@ -535,9 +534,9 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
               // Progress Indicator
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -548,7 +547,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: ThemeColors.getTextPrimary(context),
                       ),
                     ),
                     SizedBox(height: 12),

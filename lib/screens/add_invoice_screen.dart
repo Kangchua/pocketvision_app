@@ -6,7 +6,6 @@ import '../models/invoice.dart';
 import '../providers/invoice_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../widgets/custom_text_field.dart';
 import '../utils/exception_handler.dart';
@@ -324,7 +323,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Xóa', style: TextStyle(color: AppColors.danger)),
+            child: Text('Xóa', style: TextStyle(color: ThemeColors.getDanger(context))),
           ),
         ],
       ),
@@ -489,9 +488,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                             SizedBox(height: 8),
                             Container(
                               decoration: BoxDecoration(
-                                color: AppColors.surface,
+                                color: ThemeColors.getSurface(context),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.border),
+                                border: Border.all(color: ThemeColors.getBorder(context)),
                               ),
                               child: DropdownButtonFormField<String>(
                                 initialValue: _paymentMethod,
@@ -530,7 +529,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                         icon: Icon(Icons.add, size: 18),
                         label: Text('Thêm'),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
+                          foregroundColor: ThemeColors.getPrimary(context),
                         ),
                       ),
                     ],
@@ -562,7 +561,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
+                            color: ThemeColors.getPrimary(context),
                           ),
                         ),
                       ],
@@ -704,8 +703,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                           label: const Text('Thay đổi'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ThemeColors.getSurface(context),
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(color: AppColors.primary),
+                            foregroundColor: ThemeColors.getPrimary(context),
+                            side: BorderSide(color: ThemeColors.getPrimary(context)),
                           ),
                         ),
                         ElevatedButton.icon(
@@ -726,72 +725,124 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           else
             Column(
               children: [
-                GestureDetector(
-                  onTap: () => _pickImage(ImageSource.camera),
-                  child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                      color: ThemeColors.getPrimary(context),
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt,
-                        size: 48,
-                        color: ThemeColors.getPrimary(context),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Chụp ảnh',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: ThemeColors.getPrimary(context),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _pickImage(ImageSource.camera),
+                        child: Container(
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: ThemeColors.getSurface(context),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: ThemeColors.getPrimary(context),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ThemeColors.getPrimary(context).withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: ThemeColors.getPrimary(context).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 40,
+                                  color: ThemeColors.getPrimary(context),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Chụp ảnh',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: ThemeColors.getTextPrimary(context),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Mở camera',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ThemeColors.getTextSecondary(context),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => _pickImage(ImageSource.gallery),
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: ThemeColors.getSurface(context),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: ThemeColors.getBorder(context),
-                      width: 2,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.photo_library,
-                        size: 48,
-                        color: ThemeColors.getTextSecondary(context),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Chọn từ thư viện',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: ThemeColors.getTextPrimary(context),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _pickImage(ImageSource.gallery),
+                        child: Container(
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: ThemeColors.getSurface(context),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: ThemeColors.getBorder(context),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: ThemeColors.getTextSecondary(context).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.photo_library,
+                                  size: 40,
+                                  color: ThemeColors.getTextSecondary(context),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Thư viện',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: ThemeColors.getTextPrimary(context),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Chọn ảnh',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ThemeColors.getTextSecondary(context),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -801,24 +852,24 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           // Instructions
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: ThemeColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: ThemeColors.getBorder(context)),
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.primary),
-                    SizedBox(width: 8),
+                    Icon(Icons.info_outline, color: ThemeColors.getPrimary(context)),
+                    const SizedBox(width: 8),
                     Text(
                       'Hướng dẫn',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: ThemeColors.getTextPrimary(context),
                       ),
                     ),
                   ],
@@ -838,7 +889,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           if (_selectedImage != null)
             ElevatedButton(
               onPressed: _isUploading ? null : _uploadInvoiceImage,
-                          style: ElevatedButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -888,8 +939,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           Container(
             width: 4,
             height: 4,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+            decoration: BoxDecoration(
+              color: ThemeColors.getPrimary(context),
               shape: BoxShape.circle,
             ),
           ),
@@ -897,9 +948,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: ThemeColors.getTextSecondary(context),
               ),
             ),
           ),

@@ -43,14 +43,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _loadData() async {
     if (!mounted) return;
+    
+    // Đợi một chút để đảm bảo context đã sẵn sàng
+    await Future.delayed(Duration(milliseconds: 100));
+    
+    if (!mounted) return;
+    
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.user;
 
     if (user != null) {
       try {
-        await context.read<ExpenseProvider>().fetchExpenses(user.id);
-        await context.read<CategoryProvider>().fetchCategories();
-        await context.read<BudgetProvider>().fetchBudgets(user.id);
+        // Load dữ liệu song song để tối ưu tốc độ
+        await Future.wait([
+          context.read<ExpenseProvider>().fetchExpenses(user.id),
+          context.read<CategoryProvider>().fetchCategories(),
+          context.read<BudgetProvider>().fetchBudgets(user.id),
+        ]);
+        
+        // Load invoices và notifications riêng để không block UI
+        // InvoiceProvider sẽ được load trong InvoicesScreen
+        
         // Bỏ qua lỗi notification nếu có
         try {
           await context.read<NotificationProvider>().fetchNotifications();
@@ -58,7 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
           // Ignore notification errors
         }
       } catch (e) {
-        // Handle errors silently
+        // Handle errors silently - có thể log ra console trong development
+        if (mounted) {
+          debugPrint('Error loading data: $e');
+        }
       }
     }
   }
@@ -272,7 +288,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer3<AuthProvider, ExpenseProvider, BudgetProvider>(
       builder: (context, authProvider, expenseProvider, budgetProvider, _) {
         final user = authProvider.user;
-        if (user == null) return SizedBox.shrink();
+        if (user == null) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
         // Tính toán thống kê như web
         final currentMonth = DateTime.now();
@@ -283,6 +303,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final budgetUsed = budgetProvider.budgets.fold(0.0, (sum, b) => sum + b.spentAmount);
         final remainingBudget = totalBudget - budgetUsed;
         final budgetUsagePercentage = totalBudget > 0 ? (budgetUsed / totalBudget * 100).round() : 0;
+        
+        // Nếu đang loading, hiển thị loading indicator
+        if (expenseProvider.isLoading || budgetProvider.isLoading) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -356,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     value: expenseProvider.totalExpenses,
                     description: 'Tích lũy từ trước đến nay',
                     icon: Icons.trending_down,
-                    iconColor: AppColors.primary,
+                    iconColor: ThemeColors.getPrimary(context),
                   ),
                   _buildStatCard(
                     title: 'Chi tiêu tháng này',

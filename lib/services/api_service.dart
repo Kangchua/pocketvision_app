@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../models/user.dart';
 import '../models/expense.dart';
@@ -481,6 +482,45 @@ class ApiService {
       await _dio.delete('/invoices/$id');
     } catch (e) {
       throw _handleError(e);
+    }
+  }
+
+  /// Gửi ảnh đến AI server để trích xuất thông tin hóa đơn
+  Future<Map<String, dynamic>> extractInvoiceFromImage(File imageFile) async {
+    try {
+      final aiServerUrl = 'http://192.168.100.117:8000/extract_invoice';
+      
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: 'invoice.jpg',
+        ),
+      });
+
+      final dio = Dio(BaseOptions(
+        connectTimeout: Duration(seconds: 30),
+        receiveTimeout: Duration(seconds: 30),
+      ));
+
+      final response = await dio.post(
+        aiServerUrl,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: {
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.data is Map) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('AI Server Error: $e');
+      // Không throw error, chỉ log để không block upload
+      return {};
     }
   }
 

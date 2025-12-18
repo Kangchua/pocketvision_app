@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/invoice_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
+import '../utils/theme_colors.dart';
+import '../services/api_service.dart';
+import '../utils/exception_handler.dart';
 
 class UploadInvoiceScreen extends StatefulWidget {
   const UploadInvoiceScreen({super.key});
@@ -44,7 +46,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: ThemeColors.getSurface(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -53,7 +55,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.camera_alt, color: AppColors.primary),
+              leading: Icon(Icons.camera_alt, color: ThemeColors.getPrimary(context)),
               title: Text('Chụp ảnh'),
               onTap: () {
                 Navigator.pop(context);
@@ -61,7 +63,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.photo_library, color: AppColors.primary),
+              leading: Icon(Icons.photo_library, color: ThemeColors.getPrimary(context)),
               title: Text('Chọn từ thư viện'),
               onTap: () {
                 Navigator.pop(context);
@@ -85,22 +87,56 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
     });
 
     try {
+      final imageFile = File(_selectedImage!.path);
+      
+      // Gửi ảnh đến AI server để trích xuất thông tin
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('Đang trích xuất thông tin từ AI...'),
+              ],
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+
+      final apiService = ApiService();
+      final extractedData = await apiService.extractInvoiceFromImage(imageFile);
+      
+      if (mounted && extractedData.isNotEmpty) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã trích xuất thông tin từ AI. Đang upload...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Upload hóa đơn lên backend
       await context.read<InvoiceProvider>().uploadInvoice(
         user.id,
-        File(_selectedImage!.path),
+        imageFile,
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload hóa đơn thành công')),
-        );
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ExceptionHandler.showSuccessSnackBar(context, 'Upload hóa đơn thành công');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi upload: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -114,11 +150,10 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Upload Hóa đơn'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           if (_selectedImage != null && !_isUploading)
             TextButton(
@@ -126,7 +161,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
               child: Text(
                 'Upload',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: ThemeColors.getPrimary(context),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -142,14 +177,14 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                  colors: [ThemeColors.getPrimary(context), ThemeColors.getPrimary(context).withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: ThemeColors.getPrimary(context).withOpacity(0.3),
                     blurRadius: 12,
                     offset: Offset(0, 4),
                   ),
@@ -190,9 +225,9 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
             if (_selectedImage != null)
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -222,9 +257,9 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
                             icon: Icon(Icons.refresh),
                             label: Text('Thay đổi'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.surface,
-                              foregroundColor: AppColors.primary,
-                              side: BorderSide(color: AppColors.primary),
+                              backgroundColor: ThemeColors.getSurface(context),
+                              foregroundColor: ThemeColors.getPrimary(context),
+                              side: BorderSide(color: ThemeColors.getPrimary(context)),
                             ),
                           ),
                           ElevatedButton.icon(
@@ -232,7 +267,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
                             icon: Icon(Icons.delete),
                             label: Text('Xóa'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.danger,
+                              backgroundColor: ThemeColors.getDanger(context),
                               foregroundColor: Colors.white,
                             ),
                           ),
@@ -248,36 +283,44 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
                 child: Container(
                   height: 200,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: ThemeColors.getSurface(context),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.border,
+                      color: ThemeColors.getBorder(context),
                       width: 2,
+                      style: BorderStyle.solid,
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.add_photo_alternate,
-                        size: 48,
-                        color: AppColors.primary,
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: ThemeColors.getPrimary(context).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          size: 48,
+                          color: ThemeColors.getPrimary(context),
+                        ),
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'Chọn ảnh hóa đơn',
+                        'Chụp ảnh hoặc chọn từ thư viện',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: ThemeColors.getTextPrimary(context),
                         ),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Chạm để chọn từ thư viện hoặc chụp ảnh',
+                        'Chạm để mở camera hoặc chọn ảnh',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: ThemeColors.getTextSecondary(context),
                         ),
                       ),
                     ],
@@ -290,9 +333,9 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
             // Instructions
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: ThemeColors.getSurface(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: ThemeColors.getBorder(context)),
               ),
               padding: EdgeInsets.all(16),
               child: Column(
@@ -300,14 +343,14 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.primary),
+                      Icon(Icons.info_outline, color: ThemeColors.getPrimary(context)),
                       SizedBox(width: 8),
                       Text(
                         'Hướng dẫn',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: ThemeColors.getTextPrimary(context),
                         ),
                       ),
                     ],
@@ -328,14 +371,13 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
               ElevatedButton(
                 onPressed: _isUploading ? null : _uploadInvoice,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 4,
-                  shadowColor: AppColors.primary.withOpacity(0.3),
+                  shadowColor: ThemeColors.getPrimary(context).withOpacity(0.3),
                 ),
                 child: _isUploading
                     ? Row(
@@ -380,7 +422,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
             width: 4,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: ThemeColors.getPrimary(context),
               shape: BoxShape.circle,
             ),
           ),
@@ -390,7 +432,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
               text,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: ThemeColors.getTextSecondary(context),
               ),
             ),
           ),

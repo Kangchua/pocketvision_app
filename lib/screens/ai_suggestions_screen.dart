@@ -5,6 +5,7 @@ import '../providers/budget_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 
 class AISuggestionsScreen extends StatefulWidget {
   const AISuggestionsScreen({super.key});
@@ -114,14 +115,13 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Gợi ý AI'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.primary),
+            icon: Icon(Icons.refresh, color: ThemeColors.getPrimary(context)),
             onPressed: () {
               setState(() {
                 _isLoading = true;
@@ -140,13 +140,13 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                   Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: ThemeColors.getPrimary(context).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.smart_toy,
                       size: 48,
-                      color: AppColors.primary,
+                      color: ThemeColors.getPrimary(context),
                     ),
                   ),
                   SizedBox(height: 24),
@@ -155,7 +155,7 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: ThemeColors.getTextPrimary(context),
                     ),
                   ),
                   SizedBox(height: 8),
@@ -163,12 +163,12 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                     'AI đang học hỏi thói quen chi tiêu của bạn',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
                     ),
                   ),
                   SizedBox(height: 24),
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(ThemeColors.getPrimary(context)),
                   ),
                 ],
               ),
@@ -182,14 +182,14 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                        colors: [ThemeColors.getPrimary(context), ThemeColors.getPrimary(context).withOpacity(0.8)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: ThemeColors.getPrimary(context).withOpacity(0.3),
                           blurRadius: 12,
                           offset: Offset(0, 4),
                         ),
@@ -231,9 +231,9 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                         padding: EdgeInsets.only(bottom: 16),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: ThemeColors.getSurface(context),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: ThemeColors.getBorder(context)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
@@ -249,12 +249,12 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                               Container(
                                 padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
+                                  color: ThemeColors.getPrimary(context).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
                                   Icons.smart_toy,
-                                  color: AppColors.primary,
+                                  color: ThemeColors.getPrimary(context),
                                   size: 20,
                                 ),
                               ),
@@ -264,7 +264,7 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                                   suggestion,
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: AppColors.textPrimary,
+                                    color: ThemeColors.getTextPrimary(context),
                                     height: 1.5,
                                   ),
                                 ),
@@ -288,14 +288,14 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.tips_and_updates, color: AppColors.primary),
+                            Icon(Icons.tips_and_updates, color: ThemeColors.getPrimary(context)),
                             SizedBox(width: 8),
                             Text(
                               'Mẹo quản lý tài chính',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                                color: ThemeColors.getTextPrimary(context),
                               ),
                             ),
                           ],
@@ -324,7 +324,7 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: ThemeColors.getPrimary(context),
               shape: BoxShape.circle,
             ),
           ),
@@ -334,7 +334,7 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
               tip,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: ThemeColors.getTextSecondary(context),
               ),
             ),
           ),

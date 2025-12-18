@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_theme.dart';
+import '../utils/theme_colors.dart';
 import 'change_password_screen.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -36,11 +37,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: const Text('Bảo mật'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -90,9 +90,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: ThemeColors.getSurfaceLight(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: ThemeColors.getBorder(context)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,10 +131,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: ThemeColors.getTextPrimary(context),
         ),
       ),
     );
@@ -149,9 +149,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -164,27 +164,27 @@ class _SecurityScreenState extends State<SecurityScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary),
+          child: Icon(icon, color: ThemeColors.getPrimary(context)),
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: ThemeColors.getTextPrimary(context),
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
           ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+        trailing: Icon(Icons.chevron_right, color: ThemeColors.getTextSecondary(context)),
         onTap: onTap,
       ),
     );
@@ -200,9 +200,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -215,10 +215,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary),
+          child: Icon(icon, color: ThemeColors.getPrimary(context)),
         ),
         title: Text(
           title,
@@ -238,7 +238,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.primary,
+          activeThumbColor: ThemeColors.getPrimary(context),
         ),
       ),
     );
@@ -250,14 +250,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.primary, size: 20),
+        Icon(icon, color: ThemeColors.getPrimary(context), size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: ThemeColors.getTextSecondary(context),
             ),
           ),
         ),
@@ -265,6 +265,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
   }
 }
+
+
 
 
 

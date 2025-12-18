@@ -7,6 +7,7 @@ import '../models/expense.dart';
 import '../models/category.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 
 class SearchExpensesScreen extends StatefulWidget {
   const SearchExpensesScreen({super.key});
@@ -104,17 +105,16 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Tìm kiếm chi tiêu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: Column(
         children: [
           // Search and Filters
           Container(
-            color: AppColors.surface,
+            color: ThemeColors.getSurface(context),
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
@@ -123,17 +123,17 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Tìm theo tên cửa hàng hoặc ghi chú...',
-                    prefixIcon: Icon(Icons.search, color: AppColors.primary),
+                    prefixIcon: Icon(Icons.search, color: ThemeColors.getPrimary(context)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                     ),
                     filled: true,
-                    fillColor: AppColors.background,
+                    fillColor: ThemeColors.getBackground(context),
                   ),
                   onChanged: (value) => _filterExpenses(),
                 ),
@@ -192,8 +192,8 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                               : 'Chọn khoảng thời gian',
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.primary),
-                          foregroundColor: AppColors.primary,
+                          side: BorderSide(color: ThemeColors.getPrimary(context)),
+                          foregroundColor: ThemeColors.getPrimary(context),
                           padding: EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -201,7 +201,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                     SizedBox(width: 12),
                     IconButton(
                       onPressed: _clearFilters,
-                      icon: Icon(Icons.clear, color: AppColors.danger),
+                      icon: Icon(Icons.clear, color: ThemeColors.getDanger(context)),
                       tooltip: 'Xóa bộ lọc',
                     ),
                   ],
@@ -220,14 +220,14 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                         Icon(
                           Icons.search_off,
                           size: 64,
-                          color: AppColors.textSecondary,
+                          color: ThemeColors.getTextSecondary(context),
                         ),
                         SizedBox(height: 16),
                         Text(
                           'Không tìm thấy chi tiêu nào',
                           style: TextStyle(
                             fontSize: 18,
-                            color: AppColors.textSecondary,
+                            color: ThemeColors.getTextSecondary(context),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -235,7 +235,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                           'Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: ThemeColors.getTextSecondary(context),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -312,7 +312,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -326,11 +326,11 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
               hintText: '0',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: ThemeColors.getBorder(context)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
+                borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
               ),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -355,9 +355,9 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -371,12 +371,12 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
         leading: Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             Icons.receipt,
-            color: AppColors.primary,
+            color: ThemeColors.getPrimary(context),
           ),
         ),
         title: Text(
@@ -384,7 +384,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: ThemeColors.getTextPrimary(context),
           ),
         ),
         subtitle: Column(
@@ -395,7 +395,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
               FormatUtils.formatDate(expense.expenseDate, context),
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: ThemeColors.getTextSecondary(context),
               ),
             ),
             if (category != null) ...[
@@ -404,7 +404,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                 category.name,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.primary,
+                  color: ThemeColors.getPrimary(context),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -415,7 +415,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                 expense.note,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: ThemeColors.getTextSecondary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -428,7 +428,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: AppColors.primary,
+            color: ThemeColors.getPrimary(context),
           ),
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/theme_colors.dart';
 import 'edit_profile_screen.dart';
 import 'security_screen.dart';
@@ -23,7 +22,10 @@ class ProfileScreen extends StatelessWidget {
           final user = authProvider.user;
           if (user == null) {
             return Center(
-              child: Text('Chưa đăng nhập'),
+              child: Text(
+                'Chưa đăng nhập',
+                style: TextStyle(color: ThemeColors.getTextPrimary(context)),
+              ),
             );
           }
 
@@ -101,6 +103,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 12),
                       _buildSettingItem(
+                        context: context,
                         icon: Icons.edit,
                         title: 'Chỉnh sửa thông tin',
                         onTap: () {
@@ -113,6 +116,7 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                       _buildSettingItem(
+                        context: context,
                         icon: Icons.security,
                         title: 'Bảo mật',
                         onTap: () {
@@ -125,6 +129,7 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                       _buildSettingItem(
+                        context: context,
                         icon: Icons.settings,
                         title: 'Cài đặt',
                         onTap: () {
@@ -154,8 +159,8 @@ class ProfileScreen extends StatelessWidget {
                     icon: const Icon(Icons.logout, size: 18),
                     label: const Text('Đăng xuất'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(color: AppColors.danger, width: 1.5),
+                      foregroundColor: ThemeColors.getDanger(context),
+                      side: BorderSide(color: ThemeColors.getDanger(context), width: 1.5),
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -185,14 +190,15 @@ class ProfileScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    required BuildContext context,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: ThemeColors.getSurface(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: ThemeColors.getBorder(context)),
         ),
         margin: EdgeInsets.only(bottom: 12),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -201,18 +207,19 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: AppColors.primary),
+                Icon(icon, color: ThemeColors.getPrimary(context)),
                 SizedBox(width: 12),
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: ThemeColors.getTextPrimary(context),
                   ),
                 ),
               ],
             ),
-            Icon(Icons.chevron_right, color: AppColors.textLight),
+            Icon(Icons.chevron_right, color: ThemeColors.getTextLight(context)),
           ],
         ),
       ),

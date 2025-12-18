@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -42,7 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: ThemeColors.getSurface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -51,7 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              leading: Icon(Icons.camera_alt, color: ThemeColors.getPrimary(context)),
               title: const Text('Chụp ảnh'),
               onTap: () {
                 Navigator.pop(context);
@@ -59,7 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              leading: Icon(Icons.photo_library, color: ThemeColors.getPrimary(context)),
               title: const Text('Chọn từ thư viện'),
               onTap: () {
                 Navigator.pop(context);
@@ -68,7 +68,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             if (currentUser?.avatarUrl != null && currentUser!.avatarUrl!.isNotEmpty)
               ListTile(
-                leading: const Icon(Icons.delete, color: AppColors.danger),
+                leading: Icon(Icons.delete, color: ThemeColors.getDanger(context)),
                 title: const Text('Xóa ảnh đại diện'),
                 onTap: () {
                   Navigator.pop(context);
@@ -203,11 +203,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: const Text('Chỉnh sửa thông tin'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -233,7 +232,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           children: [
                             CircleAvatar(
                               radius: 48,
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: ThemeColors.getPrimary(context),
                               backgroundImage: _selectedImage != null
                                   ? FileImage(_selectedImage!) as ImageProvider
                                   : (user.avatarUrl != null && user.avatarUrl!.isNotEmpty
@@ -286,7 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     _selectedImage = null;
                                   });
                                 },
-                                icon: const Icon(Icons.close, color: AppColors.danger),
+                                icon: Icon(Icons.close, color: ThemeColors.getDanger(context)),
                                 tooltip: 'Hủy chọn ảnh',
                               ),
                             ],
@@ -306,12 +305,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       prefixIcon: const Icon(Icons.person),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
+                        borderSide: BorderSide(
+                          color: ThemeColors.getPrimary(context),
                           width: 2,
                         ),
                       ),
@@ -334,7 +333,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       enabled: false,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                       ),
                     ),
                   ),
@@ -349,7 +348,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       enabled: false,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                       ),
                     ),
                   ),
@@ -359,7 +358,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ElevatedButton(
                     onPressed: (_isLoading || _isUploadingImage) ? null : () => _saveProfile(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

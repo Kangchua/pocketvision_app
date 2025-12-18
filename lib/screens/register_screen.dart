@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -133,12 +133,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -151,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Tạo tài khoản',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.textPrimary,
+                  color: ThemeColors.getTextPrimary(context),
                 ),
               ),
               SizedBox(height: 8),
@@ -164,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _fullNameController,
                 decoration: InputDecoration(
                   hintText: 'Họ và tên',
-                  prefixIcon: Icon(Icons.person, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.person, color: ThemeColors.getTextTertiary(context)),
                 ),
               ),
               SizedBox(height: 16),
@@ -172,7 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'Email',
-                  prefixIcon: Icon(Icons.email, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.email, color: ThemeColors.getTextTertiary(context)),
                   errorText: _emailError,
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -183,13 +182,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _passwordController,
                 decoration: InputDecoration(
                   hintText: 'Mật khẩu',
-                  prefixIcon: Icon(Icons.lock, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.lock, color: ThemeColors.getTextTertiary(context)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                     onPressed: () {
                       setState(() {
@@ -206,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 8),
                 Row(
                   children: [
-                    Text('Độ mạnh: ', style: TextStyle(color: AppColors.textSecondary)),
+                    Text('Độ mạnh: ', style: TextStyle(color: ThemeColors.getTextSecondary(context))),
                     Text(
                       _getPasswordStrength(_passwordController.text),
                       style: TextStyle(
@@ -222,13 +221,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
                   hintText: 'Xác nhận mật khẩu',
-                  prefixIcon: Icon(Icons.lock, color: AppColors.textTertiary),
+                  prefixIcon: Icon(Icons.lock, color: ThemeColors.getTextTertiary(context)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirm
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                     onPressed: () {
                       setState(() {
@@ -247,7 +246,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return ElevatedButton(
                     onPressed: authProvider.isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

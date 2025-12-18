@@ -4,9 +4,9 @@ import '../models/budget.dart';
 import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class AddBudgetScreen extends StatefulWidget {
   final Budget? budget;
@@ -132,7 +132,7 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Xóa', style: TextStyle(color: AppColors.danger)),
+            child: Text('Xóa', style: TextStyle(color: ThemeColors.getDanger(context))),
           ),
         ],
       ),
@@ -156,14 +156,13 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text(widget.budget != null ? 'Cập nhật ngân sách' : 'Thêm ngân sách'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: widget.budget != null ? [
           IconButton(
-            icon: Icon(Icons.delete, color: AppColors.danger),
+            icon: Icon(Icons.delete, color: ThemeColors.getDanger(context)),
             onPressed: _deleteBudget,
           ),
         ] : null,
@@ -188,9 +187,9 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
                   SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     child: DropdownButtonFormField<int>(
                       initialValue: _selectedCategoryId,
@@ -258,7 +257,6 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _saveBudget,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

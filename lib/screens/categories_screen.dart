@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/category.dart';
-import '../utils/app_theme.dart';
 import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -68,10 +68,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: ThemeColors.getSurface(context),
         title: Text(
           'Thêm danh mục mới',
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
         ),
         content: Form(
           key: _formKey,
@@ -128,13 +128,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Hủy',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: ThemeColors.getTextSecondary(context)),
             ),
           ),
           ElevatedButton(
             onPressed: _saveCategory,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: Text('Thêm'),
@@ -211,14 +210,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Danh mục chi tiêu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: AppColors.primary),
+            icon: Icon(Icons.add, color: ThemeColors.getPrimary(context)),
             onPressed: _showAddCategoryDialog,
           ),
         ],
@@ -237,14 +235,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   Icon(
                     Icons.category,
                     size: 64,
-                    color: AppColors.textSecondary,
+                    color: ThemeColors.getTextSecondary(context),
                   ),
                   SizedBox(height: 16),
                   Text(
                     'Chưa có danh mục nào',
                     style: TextStyle(
                       fontSize: 18,
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
                     ),
                   ),
                   SizedBox(height: 8),
@@ -252,7 +250,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     'Thêm danh mục để phân loại chi tiêu',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
                     ),
                   ),
                   SizedBox(height: 24),
@@ -261,7 +259,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     icon: Icon(Icons.add),
                     label: Text('Thêm danh mục đầu tiên'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
@@ -275,9 +272,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.9,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.0,
             ),
             itemCount: categoryProvider.categories.length,
             itemBuilder: (context, index) {
@@ -291,13 +288,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Widget _buildCategoryCard(Category category) {
-    final color = AppColors.primary;
+    final color = ThemeColors.getPrimary(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -338,10 +335,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     Flexible(
                       child: Text(
                         category.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: ThemeColors.getTextPrimary(context),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -355,7 +352,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 top: 4,
                 right: 4,
                 child: IconButton(
-                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 18),
+                  icon: Icon(Icons.delete, color: ThemeColors.getDanger(context), size: 18),
                   onPressed: () => _deleteCategory(category),
                   padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(),
@@ -373,28 +370,28 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: ThemeColors.getSurface(context),
         title: Text(
           'Xóa danh mục?',
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
         ),
         content: Text(
           'Bạn có chắc chắn muốn xóa danh mục "${category.name}"?',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: ThemeColors.getTextSecondary(context)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Hủy',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: ThemeColors.getTextSecondary(context)),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               'Xóa',
-              style: TextStyle(color: AppColors.danger),
+              style: TextStyle(color: ThemeColors.getDanger(context)),
             ),
           ),
         ],

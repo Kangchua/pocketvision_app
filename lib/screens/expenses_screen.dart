@@ -35,7 +35,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Lỗi: $error'),
-            backgroundColor: AppColors.danger,
+            backgroundColor: ThemeColors.getDanger(context),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -46,7 +46,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Lỗi tải dữ liệu: $e'),
-            backgroundColor: AppColors.danger,
+            backgroundColor: ThemeColors.getDanger(context),
             duration: const Duration(seconds: 4),
           ),
         );
