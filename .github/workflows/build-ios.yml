@@ -16,7 +16,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.0'  # Hoặc version Flutter bạn đang dùng
+        flutter-version: '3.38.5'  # Version Flutter có Dart SDK 3.10.4+
         channel: 'stable'
     
     - name: Get Flutter dependencies
