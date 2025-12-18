@@ -16,8 +16,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: 'latest'  # Sử dụng Flutter version mới nhất
-        channel: 'stable'
+        channel: 'stable'  # Sử dụng Flutter stable mới nhất (không chỉ định version cụ thể)
     
     - name: Get Flutter dependencies
       run: flutter pub get
