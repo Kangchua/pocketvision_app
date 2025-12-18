@@ -1,0 +1,55 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:  # Cho phép chạy thủ công
+  push:
+    branches: [ main, master ]  # Tự động build khi push code
+
+jobs:
+  build-ios:
+    runs-on: macos-latest  # Sử dụng Mac runner của GitHub
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'  # Hoặc version Flutter bạn đang dùng
+        channel: 'stable'
+    
+    - name: Get Flutter dependencies
+      run: flutter pub get
+    
+    - name: Install CocoaPods dependencies
+      run: |
+        cd ios
+        pod install
+        cd ..
+    
+    - name: Build iOS (no codesign)
+      run: flutter build ios --release --no-codesign
+    
+    - name: Create IPA archive
+      run: |
+        mkdir -p build/ios/ipa
+        cd build/ios/iphoneos
+        zip -r ../../ipa/Runner.app.zip Runner.app
+        cd ../../..
+    
+    - name: Upload iOS build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ios-build
+        path: |
+          build/ios/iphoneos/Runner.app
+          build/ios/ipa/Runner.app.zip
+        retention-days: 7  # Giữ file trong 7 ngày
+    
+    - name: Build summary
+      run: |
+        echo "✅ iOS build completed successfully!"
+        echo "📦 App location: build/ios/iphoneos/Runner.app"
+        echo "📥 Download from Actions > Artifacts"
+
