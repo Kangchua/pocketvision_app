@@ -60,6 +60,34 @@ class AppColors {
   ];
 }
 
+class AppColorsDark {
+  // Dark mode color palette
+  static const Color primary = Color(0xFF10B981); // Emerald-500
+  static const Color primaryDark = Color(0xFF059669); // Emerald-600
+  static const Color secondary = Color(0xFF34D399); // Emerald-400
+  static const Color accent = Color(0xFF6EE7B7); // Emerald-300
+  static const Color danger = Color(0xFFEF4444); // Red-500
+  static const Color warning = Color(0xFFF59E0B); // Amber-500
+  static const Color success = Color(0xFF10B981); // Emerald-500
+  static const Color info = Color(0xFF0EA5E9); // Sky-500
+
+  // Background and surface colors
+  static const Color background = Color(0xFF111827); // Gray-900
+  static const Color surface = Color(0xFF1F2937); // Gray-800
+  static const Color surfaceLight = Color(0xFF374151); // Gray-700
+  static const Color surfaceDark = Color(0xFF111827); // Gray-900
+
+  // Text colors
+  static const Color textPrimary = Color(0xFFF9FAFB); // Gray-50 (White)
+  static const Color textSecondary = Color(0xFFD1D5DB); // Gray-300
+  static const Color textTertiary = Color(0xFF9CA3AF); // Gray-400
+  static const Color textLight = Color(0xFF6B7280); // Gray-500
+
+  // Border colors
+  static const Color border = Color(0xFF374151); // Gray-700
+  static const Color borderLight = Color(0xFF4B5563); // Gray-600
+}
+
 class AppTheme {
   static ThemeData lightTheme() {
     return ThemeData(
@@ -72,8 +100,6 @@ class AppTheme {
         error: AppColors.danger,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
-        background: AppColors.background,
-        onBackground: AppColors.textPrimary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.surface,
@@ -232,6 +258,183 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.black,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData darkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.dark(
+        primary: AppColorsDark.primary,
+        secondary: AppColorsDark.secondary,
+        tertiary: AppColorsDark.accent,
+        error: AppColorsDark.danger,
+        surface: AppColorsDark.surface,
+        onSurface: AppColorsDark.textPrimary,
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColorsDark.surface,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.3),
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: AppColorsDark.textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
+        iconTheme: IconThemeData(color: AppColorsDark.textPrimary),
+      ),
+      scaffoldBackgroundColor: AppColorsDark.background,
+      cardTheme: CardThemeData(
+        color: AppColorsDark.surface,
+        elevation: 4,
+        shadowColor: Colors.black.withOpacity(0.3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: AppColorsDark.textPrimary,
+          letterSpacing: -1.0,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: AppColorsDark.textPrimary,
+          letterSpacing: -0.8,
+        ),
+        displaySmall: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: AppColorsDark.textPrimary,
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColorsDark.textPrimary,
+          letterSpacing: -0.3,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColorsDark.textPrimary,
+          letterSpacing: -0.2,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColorsDark.textPrimary,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColorsDark.textPrimary,
+        ),
+        titleSmall: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColorsDark.textSecondary,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: AppColorsDark.textPrimary,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: AppColorsDark.textSecondary,
+          height: 1.4,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: AppColorsDark.textTertiary,
+          height: 1.3,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColorsDark.surfaceLight,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColorsDark.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColorsDark.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColorsDark.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColorsDark.danger),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        hintStyle: TextStyle(color: AppColorsDark.textLight),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColorsDark.primary,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColorsDark.surface,
+        selectedItemColor: AppColorsDark.primary,
+        unselectedItemColor: AppColorsDark.textSecondary,
+        selectedIconTheme: IconThemeData(color: AppColorsDark.primary),
+        unselectedIconTheme: IconThemeData(color: AppColorsDark.textSecondary),
+        selectedLabelStyle: TextStyle(
+          color: AppColorsDark.primary,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        unselectedLabelStyle: TextStyle(
+          color: AppColorsDark.textSecondary,
+          fontWeight: FontWeight.w400,
+          fontSize: 12,
+        ),
+        elevation: 8,
+        type: BottomNavigationBarType.fixed,
+      ),
+      drawerTheme: DrawerThemeData(
+        backgroundColor: AppColorsDark.surface,
+        elevation: 16,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppColorsDark.primary,
+        foregroundColor: Colors.white,
         elevation: 6,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

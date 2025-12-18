@@ -5,8 +5,8 @@ import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
-import '../utils/format_utils.dart';
 import '../widgets/custom_text_field.dart';
+import '../utils/exception_handler.dart';
 
 class AddBudgetScreen extends StatefulWidget {
   final Budget? budget;
@@ -49,21 +49,33 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng chọn danh mục')),
-      );
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng chọn danh mục');
+      return;
+    }
+
+    // Validate month-year format
+    final monthYear = _monthYearController.text.trim();
+    if (!ExceptionHandler.isValidMonthYear(monthYear)) {
+      ExceptionHandler.showErrorSnackBar(context, 'Định dạng tháng/năm không hợp lệ (YYYY-MM)');
+      return;
+    }
+
+    // Validate amount
+    final limitAmount = ExceptionHandler.parseAmount(_budgetController.text);
+    if (limitAmount == null || limitAmount <= 0) {
+      ExceptionHandler.showErrorSnackBar(context, 'Số tiền ngân sách phải lớn hơn 0');
+      return;
+    }
+
+    final user = context.read<AuthProvider>().user;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final user = context.read<AuthProvider>().user;
-      if (user == null) return;
-
-      final limitAmount = double.parse(_budgetController.text);
-      final monthYear = _monthYearController.text;
-
       if (widget.budget != null) {
         // Update existing budget
         final updatedBudget = widget.budget!.copyWith(
@@ -87,15 +99,16 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.budget != null ? 'Cập nhật ngân sách thành công' : 'Thêm ngân sách thành công')),
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          widget.budget != null 
+              ? 'Cập nhật ngân sách thành công' 
+              : 'Thêm ngân sách thành công',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -130,15 +143,11 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
         await context.read<BudgetProvider>().deleteBudget(widget.budget!.id);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Xóa ngân sách thành công')),
-          );
+          ExceptionHandler.showSuccessSnackBar(context, 'Xóa ngân sách thành công');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: $e')),
-          );
+          ExceptionHandler.showErrorSnackBar(context, e);
         }
       }
     }

@@ -9,6 +9,8 @@ import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../widgets/custom_text_field.dart';
+import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class AddInvoiceScreen extends StatefulWidget {
   final Invoice? invoice;
@@ -77,12 +79,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chọn ảnh: ${e.toString()}'),
-            backgroundColor: AppColors.danger,
-          ),
+        ExceptionHandler.showErrorSnackBar(
+          context,
+          'Lỗi khi chọn ảnh: ${ExceptionHandler.getErrorMessage(e)}',
         );
       }
     }
@@ -91,7 +90,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: ThemeColors.getSurface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -100,7 +99,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              leading: Icon(Icons.camera_alt, color: ThemeColors.getPrimary(context)),
               title: const Text('Chụp ảnh'),
               onTap: () {
                 Navigator.pop(context);
@@ -108,7 +107,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              leading: Icon(Icons.photo_library, color: ThemeColors.getPrimary(context)),
               title: const Text('Chọn từ thư viện'),
               onTap: () {
                 Navigator.pop(context);
@@ -123,43 +122,45 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
 
   Future<void> _uploadInvoiceImage() async {
     if (_selectedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ảnh hóa đơn')),
-      );
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng chọn ảnh hóa đơn');
       return;
     }
 
     final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+      return;
+    }
+
+    // Check file exists
+    final file = File(_selectedImage!.path);
+    if (!await file.exists()) {
+      ExceptionHandler.showErrorSnackBar(context, 'File ảnh không tồn tại');
+      return;
+    }
+
+    // Check file size (max 10MB)
+    final fileSize = await file.length();
+    if (fileSize > 10 * 1024 * 1024) {
+      ExceptionHandler.showErrorSnackBar(context, 'Kích thước file quá lớn (tối đa 10MB)');
+      return;
+    }
 
     setState(() => _isUploading = true);
 
     try {
       await context.read<InvoiceProvider>().uploadInvoice(
         user.id,
-        File(_selectedImage!.path),
+        file,
       );
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Upload hóa đơn thành công'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ExceptionHandler.showSuccessSnackBar(context, 'Upload hóa đơn thành công');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi upload: $e'),
-            backgroundColor: AppColors.danger,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -220,43 +221,54 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
 
     // Validate items
     if (_items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng thêm ít nhất một mặt hàng')),
-      );
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng thêm ít nhất một mặt hàng');
       return;
     }
 
-    for (var item in _items) {
-      if (item.itemName.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tên mặt hàng không được để trống')),
-        );
+    for (var i = 0; i < _items.length; i++) {
+      final item = _items[i];
+      if (item.itemName.trim().isEmpty) {
+        ExceptionHandler.showErrorSnackBar(context, 'Tên mặt hàng thứ ${i + 1} không được để trống');
+        return;
+      }
+      if (item.quantity <= 0) {
+        ExceptionHandler.showErrorSnackBar(context, 'Số lượng mặt hàng thứ ${i + 1} phải lớn hơn 0');
         return;
       }
       if (item.unitPrice <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đơn giá phải lớn hơn 0')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, 'Đơn giá mặt hàng thứ ${i + 1} phải lớn hơn 0');
         return;
       }
+    }
+
+    if (_totalAmount <= 0) {
+      ExceptionHandler.showErrorSnackBar(context, 'Tổng tiền phải lớn hơn 0');
+      return;
+    }
+
+    final user = context.read<AuthProvider>().user;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+      return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final user = context.read<AuthProvider>().user;
-      if (user == null) return;
-
       if (widget.invoice != null) {
         // Update existing invoice
         await context.read<InvoiceProvider>().updateInvoice(
           id: widget.invoice!.id,
           categoryId: _selectedCategoryId,
-          storeName: _storeNameController.text.isNotEmpty ? _storeNameController.text : null,
+          storeName: _storeNameController.text.trim().isNotEmpty 
+              ? _storeNameController.text.trim() 
+              : null,
           invoiceDate: _invoiceDate,
           totalAmount: _totalAmount,
           paymentMethod: _paymentMethod,
-          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+          note: _noteController.text.trim().isNotEmpty 
+              ? _noteController.text.trim() 
+              : null,
           items: _items,
         );
       } else {
@@ -264,31 +276,31 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
         await context.read<InvoiceProvider>().createInvoice(
           userId: user.id,
           categoryId: _selectedCategoryId,
-          storeName: _storeNameController.text.isNotEmpty ? _storeNameController.text : null,
+          storeName: _storeNameController.text.trim().isNotEmpty 
+              ? _storeNameController.text.trim() 
+              : null,
           invoiceDate: _invoiceDate,
           totalAmount: _totalAmount,
           paymentMethod: _paymentMethod,
-          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+          note: _noteController.text.trim().isNotEmpty 
+              ? _noteController.text.trim() 
+              : null,
           items: _items,
         );
       }
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.invoice != null ? 'Cập nhật hóa đơn thành công' : 'Thêm hóa đơn thành công')),
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          widget.invoice != null 
+              ? 'Cập nhật hóa đơn thành công' 
+              : 'Thêm hóa đơn thành công',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: AppColors.danger,
-            duration: Duration(seconds: 4),
-          ),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -323,20 +335,11 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
         await context.read<InvoiceProvider>().deleteInvoice(widget.invoice!.id);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Xóa hóa đơn thành công')),
-          );
+          ExceptionHandler.showSuccessSnackBar(context, 'Xóa hóa đơn thành công');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: $e'),
-              backgroundColor: AppColors.danger,
-              duration: Duration(seconds: 4),
-            ),
-          );
+          ExceptionHandler.showErrorSnackBar(context, e);
         }
       }
     }
@@ -345,22 +348,21 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text(widget.invoice != null ? 'Cập nhật hóa đơn' : 'Thêm hóa đơn'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: widget.invoice != null ? [
           IconButton(
-            icon: const Icon(Icons.delete, color: AppColors.danger),
+            icon: Icon(Icons.delete, color: ThemeColors.getDanger(context)),
             onPressed: _deleteInvoice,
           ),
         ] : null,
         bottom: widget.invoice == null ? TabBar(
           controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primary,
+          labelColor: ThemeColors.getPrimary(context),
+          unselectedLabelColor: ThemeColors.getTextSecondary(context),
+          indicatorColor: ThemeColors.getPrimary(context),
           tabs: const [
             Tab(icon: Icon(Icons.edit), text: 'Nhập thủ công'),
             Tab(icon: Icon(Icons.camera_alt), text: 'Chụp ảnh'),
@@ -413,9 +415,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                   SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     child: DropdownButtonFormField<int>(
                       initialValue: _selectedCategoryId,
@@ -454,16 +456,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                               child: Container(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.surface,
+                                  color: ThemeColors.getSurface(context),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.border),
+                                  border: Border.all(color: ThemeColors.getBorder(context)),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.calendar_today, color: AppColors.textSecondary),
+                                    Icon(Icons.calendar_today, color: ThemeColors.getTextSecondary(context)),
                                     SizedBox(width: 8),
                                     Text(
-                                      FormatUtils.formatDate(_invoiceDate),
+                                      FormatUtils.formatDate(_invoiceDate, context),
                                       style: Theme.of(context).textTheme.bodyMedium,
                                     ),
                                   ],
@@ -543,7 +545,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                   Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
+                      color: ThemeColors.getSurfaceLight(context),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -556,7 +558,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                           ),
                         ),
                         Text(
-                          FormatUtils.formatCurrency(_totalAmount),
+                          FormatUtils.formatCurrency(_totalAmount, context),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -578,8 +580,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _saveInvoice,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                          style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -622,14 +623,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                colors: [ThemeColors.getPrimary(context), ThemeColors.getPrimary(context).withOpacity(0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: ThemeColors.getPrimary(context).withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -670,9 +671,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           if (_selectedImage != null)
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: ThemeColors.getSurface(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: ThemeColors.getBorder(context)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -702,7 +703,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                           icon: const Icon(Icons.refresh),
                           label: const Text('Thay đổi'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.surface,
+                            backgroundColor: ThemeColors.getSurface(context),
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),
                           ),
@@ -712,7 +713,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                           icon: const Icon(Icons.delete),
                           label: const Text('Xóa'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.danger,
+                            backgroundColor: ThemeColors.getDanger(context),
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -723,46 +724,76 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
               ),
             )
           else
-            GestureDetector(
-              onTap: _showImageSourceDialog,
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.border,
-                    width: 2,
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: () => _pickImage(ImageSource.camera),
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                      color: ThemeColors.getPrimary(context),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.camera_alt,
+                        size: 48,
+                        color: ThemeColors.getPrimary(context),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Chụp ảnh',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: ThemeColors.getPrimary(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.add_photo_alternate,
-                      size: 48,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Chọn ảnh hóa đơn',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Chạm để chọn từ thư viện hoặc chụp ảnh',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
               ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _pickImage(ImageSource.gallery),
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: ThemeColors.getSurface(context),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: ThemeColors.getBorder(context),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.photo_library,
+                        size: 48,
+                        color: ThemeColors.getTextSecondary(context),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Chọn từ thư viện',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: ThemeColors.getTextPrimary(context),
+                        ),
+                      ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
 
           const SizedBox(height: 24),
@@ -807,15 +838,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
           if (_selectedImage != null)
             ElevatedButton(
               onPressed: _isUploading ? null : _uploadInvoiceImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                          style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
-                shadowColor: AppColors.primary.withOpacity(0.3),
+                shadowColor: ThemeColors.getPrimary(context).withOpacity(0.3),
               ),
               child: _isUploading
                   ? const Row(
@@ -884,12 +914,12 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
     final unitPriceController = TextEditingController(text: item.unitPrice.toString());
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
       ),
       child: Column(
         children: [
@@ -903,28 +933,26 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                     hintText: 'Tên mặt hàng',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
+                  textDirection: TextDirection.ltr,
                   textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) {
-                    // Focus vào ô tiếp theo
-                  },
                   onChanged: (value) {
                     _updateItem(index, item.copyWith(itemName: value));
                   },
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               IconButton(
                 onPressed: () => _removeItem(index),
-                icon: Icon(Icons.delete, color: AppColors.danger),
-                padding: EdgeInsets.all(8),
+                icon: Icon(Icons.delete, color: ThemeColors.getDanger(context)),
+                padding: const EdgeInsets.all(8),
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -934,22 +962,20 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                     hintText: 'Số lượng',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) {
-                    // Focus vào ô tiếp theo
-                  },
+                  textDirection: TextDirection.ltr,
                   onChanged: (value) {
                     final quantity = int.tryParse(value) ?? 1;
                     _updateItem(index, item.copyWith(quantity: quantity));
                   },
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
                 flex: 2,
                 child: TextFormField(
@@ -958,40 +984,33 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                     hintText: 'Đơn giá',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) {
-                    // Xác nhận và tính toán
-                    final quantity = int.tryParse(quantityController.text) ?? 1;
-                    final unitPrice = double.tryParse(unitPriceController.text) ?? 0;
-                    _updateItem(index, item.copyWith(
-                      quantity: quantity,
-                      unitPrice: unitPrice,
-                    ));
-                  },
+                  textDirection: TextDirection.ltr,
                   onChanged: (value) {
                     final unitPrice = double.tryParse(value) ?? 0;
                     _updateItem(index, item.copyWith(unitPrice: unitPrice));
                   },
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
+                    color: ThemeColors.getSurfaceLight(context),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    FormatUtils.formatCurrency(item.totalPrice),
+                    FormatUtils.formatCurrency(item.totalPrice, context),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
+                      fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
                   ),

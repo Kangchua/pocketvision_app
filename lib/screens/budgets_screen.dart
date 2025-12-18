@@ -5,6 +5,7 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 import 'add_budget_screen.dart';
 
 class BudgetsScreen extends StatefulWidget {
@@ -23,22 +24,45 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
 
   void _loadBudgets() async {
     final user = context.read<AuthProvider>().user;
-    if (user != null) {
+    if (user == null) return;
+
+    try {
       await context.read<BudgetProvider>().fetchBudgets(user.id);
+      final error = context.read<BudgetProvider>().error;
+      if (error != null && mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $error'),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi tải dữ liệu: $e'),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Ngân sách'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh),
             onPressed: _loadBudgets,
             tooltip: 'Làm mới',
           ),
@@ -56,14 +80,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     height: 48,
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(ThemeColors.getPrimary(context)),
                     ),
                   ),
                   SizedBox(height: 16),
                   Text(
                     'Đang tải...',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
                     ),
                   ),
                 ],
@@ -79,11 +103,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: ThemeColors.getPrimary(context).withOpacity(0.1),
                           blurRadius: 20,
                           offset: Offset(0, 8),
                         ),
@@ -92,14 +116,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     child: Icon(
                       Icons.account_balance_wallet,
                       size: 64,
-                      color: AppColors.textLight,
+                      color: ThemeColors.getTextLight(context),
                     ),
                   ),
                   SizedBox(height: 24),
                   Text(
                     'Chưa có ngân sách nào',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: ThemeColors.getTextSecondary(context),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -107,7 +131,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Text(
                     'Tạo ngân sách đầu tiên để bắt đầu quản lý chi tiêu',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -128,7 +152,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 margin: EdgeInsets.only(bottom: 16),
                 child: Card(
                   elevation: 4,
-                  shadowColor: AppColors.primary.withOpacity(0.1),
+                  shadowColor: ThemeColors.getPrimary(context).withOpacity(0.1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -177,7 +201,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                     Text(
                                       'Ngân sách hàng tháng',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.textTertiary,
+                                        color: ThemeColors.getTextTertiary(context),
                                       ),
                                     ),
                                   ],
@@ -187,10 +211,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: percentage > 100
-                                      ? AppColors.danger.withOpacity(0.1)
+                                      ? ThemeColors.getDanger(context).withOpacity(0.1)
                                       : percentage > 80
-                                          ? AppColors.warning.withOpacity(0.1)
-                                          : AppColors.success.withOpacity(0.1),
+                                          ? ThemeColors.getWarning(context).withOpacity(0.1)
+                                          : ThemeColors.getSuccess(context).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -199,10 +223,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                     color: percentage > 100
-                                        ? AppColors.danger
+                                        ? ThemeColors.getDanger(context)
                                         : percentage > 80
-                                            ? AppColors.warning
-                                            : AppColors.success,
+                                            ? ThemeColors.getWarning(context)
+                                            : ThemeColors.getSuccess(context),
                                   ),
                                 ),
                               ),
@@ -214,7 +238,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           Container(
                             height: 12,
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLight,
+                              color: ThemeColors.getSurfaceLight(context),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: ClipRRect(
@@ -224,10 +248,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                 backgroundColor: Colors.transparent,
                                 valueColor: AlwaysStoppedAnimation(
                                   percentage > 100
-                                      ? AppColors.danger
+                                      ? ThemeColors.getDanger(context)
                                       : percentage > 80
-                                          ? AppColors.warning
-                                          : AppColors.success,
+                                          ? ThemeColors.getWarning(context)
+                                          : ThemeColors.getSuccess(context),
                                 ),
                               ),
                             ),
@@ -244,17 +268,17 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                     Text(
                                       'Đã chi',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.textTertiary,
+                                        color: ThemeColors.getTextTertiary(context),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      FormatUtils.formatCurrency(budget.spentAmount),
+                                      FormatUtils.formatCurrency(budget.spentAmount, context),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                                        color: ThemeColors.getTextPrimary(context),
                                       ),
                                     ),
                                   ],
@@ -263,7 +287,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                               Container(
                                 height: 40,
                                 width: 1,
-                                color: AppColors.border,
+                                color: ThemeColors.getBorder(context),
                               ),
                               Expanded(
                                 child: Column(
@@ -272,17 +296,17 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                                     Text(
                                       'Ngân sách',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.textTertiary,
+                                        color: ThemeColors.getTextTertiary(context),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      FormatUtils.formatCurrency(budget.limitAmount),
+                                      FormatUtils.formatCurrency(budget.limitAmount, context),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                                        color: ThemeColors.getTextPrimary(context),
                                       ),
                                     ),
                                   ],

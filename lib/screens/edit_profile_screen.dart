@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -12,8 +15,11 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
   late TextEditingController _fullNameController;
+  File? _selectedImage;
   bool _isLoading = false;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -30,7 +36,115 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _saveProfile() async {
+  Future<void> _showImageSourceDialog() async {
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.user;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Chụp ảnh'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Chọn từ thư viện'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            if (currentUser?.avatarUrl != null && currentUser!.avatarUrl!.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.delete, color: AppColors.danger),
+                title: const Text('Xóa ảnh đại diện'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _selectedImage = null;
+                  });
+                  _saveProfile(removeAvatar: true);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        // Tự động upload ảnh khi chọn
+        await _uploadAndSaveProfile();
+      }
+    } catch (e) {
+      if (mounted) {
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    }
+  }
+
+  Future<void> _uploadAndSaveProfile() async {
+    if (_selectedImage == null) return;
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      // Upload ảnh lên server (giả sử có endpoint upload)
+      // Hoặc convert sang base64 và gửi kèm trong updateProfile
+      // Ở đây tôi sẽ giả định backend hỗ trợ upload file
+      // Nếu không, có thể cần thêm API endpoint upload avatar
+      
+      // Tạm thời, chúng ta sẽ lưu đường dẫn local và gửi URL
+      // Trong thực tế, cần upload file lên server trước
+      // Nếu backend yêu cầu URL, có thể cần upload file trước
+      // Ở đây tôi sẽ giả định backend chấp nhận file path hoặc cần upload riêng
+      // Vì API hiện tại chỉ nhận avatarUrl (string), nên cần upload file trước
+      
+      // Tạm thời bỏ qua upload file, chỉ lưu local path
+      // TODO: Implement actual file upload to server
+      
+      setState(() {
+        _isUploadingImage = false;
+      });
+      
+      ExceptionHandler.showSuccessSnackBar(context, 'Đã chọn ảnh. Vui lòng lưu để cập nhật.');
+    } catch (e) {
+      setState(() {
+        _isUploadingImage = false;
+      });
+      if (mounted) {
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    }
+  }
+
+  Future<void> _saveProfile({bool removeAvatar = false}) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -41,27 +155,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
+      
+      // Nếu có ảnh mới được chọn, cần upload lên server trước
+      // Ở đây tôi giả định backend có endpoint upload avatar
+      // Hoặc có thể convert sang base64
+      String? avatarUrl;
+      
+      if (removeAvatar) {
+        avatarUrl = '';
+      } else if (_selectedImage != null) {
+        // TODO: Upload file to server and get URL
+        // Tạm thời, nếu backend chấp nhận base64, có thể convert
+        // Hoặc cần gọi API upload riêng
+        // Ở đây tôi sẽ giả định đã có URL sau khi upload
+        ExceptionHandler.showErrorSnackBar(
+          context, 
+          'Tính năng upload ảnh cần endpoint upload từ backend. Vui lòng liên hệ admin.',
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
       await authProvider.updateProfile(
         fullName: _fullNameController.text.trim(),
+        avatarUrl: avatarUrl,
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cập nhật thông tin thành công'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ExceptionHandler.showSuccessSnackBar(context, 'Cập nhật thông tin thành công');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -101,32 +229,68 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Center(
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: AppColors.primary,
-                          child: Text(
-                            user.fullName.isNotEmpty
-                                ? user.fullName[0].toUpperCase()
-                                : 'U',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 48,
+                              backgroundColor: AppColors.primary,
+                              backgroundImage: _selectedImage != null
+                                  ? FileImage(_selectedImage!) as ImageProvider
+                                  : (user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                                      ? NetworkImage(user.avatarUrl!) as ImageProvider
+                                      : null),
+                              child: _selectedImage == null && 
+                                     (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                                  ? Text(
+                                      user.fullName.isNotEmpty
+                                          ? user.fullName[0].toUpperCase()
+                                          : 'U',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : null,
                             ),
-                          ),
+                            if (_isUploadingImage)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        TextButton.icon(
-                          onPressed: () {
-                            // TODO: Implement avatar upload
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tính năng đang được phát triển'),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              onPressed: _isUploadingImage ? null : () => _showImageSourceDialog(),
+                              icon: const Icon(Icons.camera_alt),
+                              label: const Text('Đổi ảnh đại diện'),
+                            ),
+                            if (_selectedImage != null) ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedImage = null;
+                                  });
+                                },
+                                icon: const Icon(Icons.close, color: AppColors.danger),
+                                tooltip: 'Hủy chọn ảnh',
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text('Đổi ảnh đại diện'),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -193,7 +357,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   // Save Button
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _saveProfile,
+                    onPressed: (_isLoading || _isUploadingImage) ? null : () => _saveProfile(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -229,4 +393,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+
+
 

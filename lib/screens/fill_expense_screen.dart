@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/expense_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
@@ -473,7 +472,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              FormatUtils.formatDate(_selectedDate),
+                              FormatUtils.formatDate(_selectedDate, context),
                               style: TextStyle(fontSize: 16),
                             ),
                             Icon(Icons.calendar_today, color: AppColors.primary),

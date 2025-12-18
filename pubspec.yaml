@@ -51,6 +51,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.6
   freezed: ^2.4.1
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -93,3 +94,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Flutter Launcher Icons Configuration
+# Để sử dụng: 
+# 1. Tạo icon 1024x1024 và đặt vào assets/icon/app_icon.png
+# 2. Chạy: flutter pub get && flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"  # Thay đổi đường dẫn này sau khi tạo icon
+  adaptive_icon_background: "#059669"  # Màu nền cho Android adaptive icon (Emerald Green)
+  # adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"  # Uncomment nếu có foreground icon riêng

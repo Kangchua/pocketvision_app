@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -45,22 +46,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đổi mật khẩu thành công'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ExceptionHandler.showSuccessSnackBar(context, 'Đổi mật khẩu thành công');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -283,4 +274,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 }
+
+
 

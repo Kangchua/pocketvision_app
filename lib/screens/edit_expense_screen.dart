@@ -287,7 +287,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                         ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
-                          value: _selectedPaymentMethod,
+                          initialValue: _selectedPaymentMethod,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -354,7 +354,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  FormatUtils.formatDate(_selectedDate),
+                                  FormatUtils.formatDate(_selectedDate, context),
                                   style: TextStyle(fontSize: 16),
                                 ),
                                 Icon(Icons.calendar_today, color: AppColors.primary),

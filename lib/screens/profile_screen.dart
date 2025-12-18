@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/theme_colors.dart';
 import 'edit_profile_screen.dart';
 import 'security_screen.dart';
 import 'settings_screen.dart';
@@ -12,11 +13,10 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Tài khoản'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -32,23 +32,28 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 // Profile Header
                 Container(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   padding: EdgeInsets.all(24),
                   child: Column(
                     children: [
                       CircleAvatar(
                         radius: 48,
-                        backgroundColor: AppColors.primary,
-                        child: Text(
-                          user.fullName.isNotEmpty
-                              ? user.fullName[0].toUpperCase()
-                              : 'U',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        backgroundColor: ThemeColors.getPrimary(context),
+                        backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                            ? NetworkImage(user.avatarUrl!)
+                            : null,
+                        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+                            ? Text(
+                                user.fullName.isNotEmpty
+                                    ? user.fullName[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            : null,
                       ),
                       SizedBox(height: 16),
                       Text(
@@ -63,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                       SizedBox(height: 4),
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
+                          color: ThemeColors.getSurfaceLight(context),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         padding: EdgeInsets.symmetric(
@@ -73,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                         child: Text(
                           user.role,
                           style: TextStyle(
-                            color: AppColors.textTertiary,
+                            color: ThemeColors.getTextTertiary(context),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -138,27 +143,22 @@ class ProfileScreen extends StatelessWidget {
 
                 // Logout Button
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: ElevatedButton(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: OutlinedButton.icon(
                     onPressed: () async {
                       await context.read<AuthProvider>().logout();
                       if (context.mounted) {
                         Navigator.of(context).pushReplacementNamed('/login');
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: const Icon(Icons.logout, size: 18),
+                    label: const Text('Đăng xuất'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      side: const BorderSide(color: AppColors.danger, width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Đăng xuất',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),

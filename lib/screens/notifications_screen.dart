@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/notification_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -22,25 +23,135 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await context.read<NotificationProvider>().fetchNotifications();
       final error = context.read<NotificationProvider>().error;
       if (error != null && mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $error'),
-            backgroundColor: AppColors.danger,
-            duration: Duration(seconds: 4),
-          ),
-        );
+        ExceptionHandler.showErrorSnackBar(context, error);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: AppColors.danger,
-            duration: Duration(seconds: 4),
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    }
+  }
+
+  Future<void> _markAsRead(int id) async {
+    try {
+      await context.read<NotificationProvider>().markAsRead(id);
+      if (mounted) {
+        ExceptionHandler.showSuccessSnackBar(context, 'Đã đánh dấu đã đọc');
+      }
+    } catch (e) {
+      if (mounted) {
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final provider = context.read<NotificationProvider>();
+    if (provider.unreadCount == 0) {
+      ExceptionHandler.showInfoSnackBar(context, 'Không có thông báo chưa đọc');
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Đánh dấu tất cả đã đọc?'),
+        content: Text('Bạn có muốn đánh dấu ${provider.unreadCount} thông báo là đã đọc?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
           ),
-        );
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Đồng ý', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await provider.markAllAsRead();
+        if (mounted) {
+          ExceptionHandler.showSuccessSnackBar(context, 'Đã đánh dấu tất cả đã đọc');
+        }
+      } catch (e) {
+        if (mounted) {
+          ExceptionHandler.showErrorSnackBar(context, e);
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteNotification(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa thông báo?'),
+        content: const Text('Bạn có chắc chắn muốn xóa thông báo này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await context.read<NotificationProvider>().deleteNotification(id);
+        if (mounted) {
+          ExceptionHandler.showSuccessSnackBar(context, 'Đã xóa thông báo');
+        }
+      } catch (e) {
+        if (mounted) {
+          ExceptionHandler.showErrorSnackBar(context, e);
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteAllNotifications() async {
+    final provider = context.read<NotificationProvider>();
+    if (provider.notifications.isEmpty) {
+      ExceptionHandler.showInfoSnackBar(context, 'Không có thông báo để xóa');
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa tất cả thông báo?'),
+        content: Text('Bạn có chắc chắn muốn xóa tất cả ${provider.notifications.length} thông báo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa tất cả', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await provider.deleteAllNotifications();
+        if (mounted) {
+          ExceptionHandler.showSuccessSnackBar(context, 'Đã xóa tất cả thông báo');
+        }
+      } catch (e) {
+        if (mounted) {
+          ExceptionHandler.showErrorSnackBar(context, e);
+        }
       }
     }
   }
@@ -50,13 +161,96 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Thông báo'),
+        title: Consumer<NotificationProvider>(
+          builder: (context, provider, _) {
+            final unreadCount = provider.unreadCount;
+            return Row(
+              children: [
+                const Text('Thông báo'),
+                if (unreadCount > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
         elevation: 0,
         backgroundColor: AppColors.surface,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
-            onPressed: _loadNotifications,
+          Consumer<NotificationProvider>(
+            builder: (context, provider, _) {
+              if (provider.unreadCount > 0) {
+                return IconButton(
+                  icon: const Icon(Icons.done_all, color: AppColors.primary),
+                  tooltip: 'Đánh dấu tất cả đã đọc',
+                  onPressed: _markAllAsRead,
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+            onSelected: (value) {
+              switch (value) {
+                case 'mark_all_read':
+                  _markAllAsRead();
+                  break;
+                case 'delete_all':
+                  _deleteAllNotifications();
+                  break;
+                case 'refresh':
+                  _loadNotifications();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'mark_all_read',
+                child: Row(
+                  children: [
+                    Icon(Icons.done_all, size: 20, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text('Đánh dấu tất cả đã đọc'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete_all',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep, size: 20, color: AppColors.danger),
+                    SizedBox(width: 12),
+                    Text('Xóa tất cả'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'refresh',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh, size: 20, color: AppColors.textPrimary),
+                    SizedBox(width: 12),
+                    Text('Làm mới'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -121,57 +315,276 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             );
           }
 
+          final unreadNotifications = notificationProvider.unreadNotifications;
+          final readNotifications = notificationProvider.readNotifications;
+
           return RefreshIndicator(
             onRefresh: _loadNotifications,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: notificationProvider.notifications.length,
-              itemBuilder: (context, index) {
-                final notification = notificationProvider.notifications[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        notification.isRead ? Icons.notifications_none : Icons.notifications,
-                        color: notification.isRead 
-                            ? AppColors.textSecondary 
-                            : AppColors.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              notification.message,
-                              style: Theme.of(context).textTheme.bodyMedium,
+            child: CustomScrollView(
+              slivers: [
+                // Unread Notifications Section
+                if (unreadNotifications.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.notifications_active, 
+                              color: AppColors.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Chưa đọc (${unreadNotifications.length})',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatDate(notification.createdAt ?? DateTime.now()),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final notification = unreadNotifications[index];
+                        return _buildNotificationCard(context, notification, false);
+                      },
+                      childCount: unreadNotifications.length,
+                    ),
+                  ),
+                ],
+
+                // Read Notifications Section
+                if (readNotifications.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.notifications_none, 
+                              color: AppColors.textSecondary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Đã đọc (${readNotifications.length})',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final notification = readNotifications[index];
+                        return _buildNotificationCard(context, notification, true);
+                      },
+                      childCount: readNotifications.length,
+                    ),
+                  ),
+                ],
+
+                // Empty state (should not reach here, but just in case)
+                if (notificationProvider.notifications.isEmpty)
+                  const SliverFillRemaining(
+                    child: SizedBox.shrink(),
+                  ),
+              ],
             ),
           );
         },
       ),
     );
+  }
+
+  Widget _buildNotificationCard(BuildContext context, notification, bool isRead) {
+    return Dismissible(
+      key: Key('notification_${notification.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.delete,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Xóa thông báo?'),
+            content: const Text('Bạn có chắc chắn muốn xóa thông báo này?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),
+              ),
+            ],
+          ),
+        );
+        return confirm == true;
+      },
+      onDismissed: (direction) {
+        _deleteNotification(notification.id);
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isRead ? AppColors.surface : AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isRead ? AppColors.border : AppColors.primary.withOpacity(0.3),
+            width: isRead ? 1 : 1.5,
+          ),
+          boxShadow: isRead ? null : [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              if (!isRead) {
+                _markAsRead(notification.id);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isRead 
+                          ? AppColors.textSecondary.withOpacity(0.1)
+                          : AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getNotificationIcon(notification.type),
+                      color: isRead 
+                          ? AppColors.textSecondary 
+                          : AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                notification.message,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (!isRead)
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatDate(notification.createdAt ?? DateTime.now()),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, 
+                        color: AppColors.textSecondary, size: 20),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'mark_read':
+                          if (!isRead) {
+                            _markAsRead(notification.id);
+                          }
+                          break;
+                        case 'delete':
+                          _deleteNotification(notification.id);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      if (!isRead)
+                        const PopupMenuItem(
+                          value: 'mark_read',
+                          child: Row(
+                            children: [
+                              Icon(Icons.done, size: 18, color: AppColors.primary),
+                              SizedBox(width: 12),
+                              Text('Đánh dấu đã đọc'),
+                            ],
+                          ),
+                        ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: AppColors.danger),
+                            SizedBox(width: 12),
+                            Text('Xóa'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getNotificationIcon(String type) {
+    switch (type.toUpperCase()) {
+      case 'BUDGET_WARNING':
+        return Icons.warning;
+      case 'NEW_INVOICE':
+        return Icons.receipt_long;
+      case 'PAYMENT_REMINDER':
+        return Icons.payment;
+      case 'GENERAL':
+      default:
+        return Icons.notifications;
+    }
   }
 
   String _formatDate(DateTime date) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -31,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    return ExceptionHandler.isValidEmail(email);
   }
 
   String _getPasswordStrength(String password) {
@@ -80,25 +81,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _register() async {
     _validateForm();
 
-    if (_fullNameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty ||
-        _emailError != null ||
-        _passwordError != null ||
-        _confirmPasswordError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng kiểm tra lại thông tin')),
-      );
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    // Validation
+    if (fullName.isEmpty) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng nhập họ và tên');
+      return;
+    }
+
+    if (email.isEmpty || _emailError != null) {
+      ExceptionHandler.showErrorSnackBar(context, _emailError ?? 'Vui lòng nhập email hợp lệ');
+      return;
+    }
+
+    if (password.isEmpty || _passwordError != null) {
+      ExceptionHandler.showErrorSnackBar(context, _passwordError ?? 'Vui lòng nhập mật khẩu hợp lệ');
+      return;
+    }
+
+    if (confirmPassword.isEmpty || _confirmPasswordError != null) {
+      ExceptionHandler.showErrorSnackBar(context, _confirmPasswordError ?? 'Mật khẩu xác nhận không khớp');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ExceptionHandler.showErrorSnackBar(context, 'Mật khẩu xác nhận không khớp');
       return;
     }
 
     try {
       await context.read<AuthProvider>().register(
-            fullName: _fullNameController.text,
-            email: _emailController.text,
-            password: _passwordController.text,
-            confirmPassword: _confirmPasswordController.text,
+            fullName: fullName,
+            email: email,
+            password: password,
+            confirmPassword: confirmPassword,
           );
 
       if (mounted) {
@@ -106,9 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi đăng ký: $e')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     }
   }

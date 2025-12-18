@@ -58,13 +58,13 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
     // Category analysis
     final categorySpending = <int, double>{};
     for (final expense in monthlyExpenses) {
-      categorySpending[expense.categoryId!] = (categorySpending[expense.categoryId!] ?? 0) + expense.totalAmount;
+      categorySpending[expense.categoryId] = (categorySpending[expense.categoryId] ?? 0) + expense.totalAmount;
     }
 
     final topCategory = categorySpending.entries
         .reduce((a, b) => a.value > b.value ? a : b);
 
-    suggestions.add('Danh mục chi tiêu nhiều nhất tháng này là ${topCategory.key} với ${FormatUtils.formatCurrency(topCategory.value)}.');
+    suggestions.add('Danh mục chi tiêu nhiều nhất tháng này là ${topCategory.key} với ${FormatUtils.formatCurrency(topCategory.value, context)}.');
 
     // Trend analysis
     final lastMonth = DateTime(currentMonth.year, currentMonth.month - 1);
@@ -84,13 +84,13 @@ class _AISuggestionsScreenState extends State<AISuggestionsScreen> {
     // Savings suggestions
     if (totalBudget > 0 && totalSpent < totalBudget) {
       final remaining = totalBudget - totalSpent;
-      suggestions.add('Bạn còn ${FormatUtils.formatCurrency(remaining)} trong ngân sách tháng này. Có thể tiết kiệm hoặc đầu tư số tiền này.');
+      suggestions.add('Bạn còn ${FormatUtils.formatCurrency(remaining, context)} trong ngân sách tháng này. Có thể tiết kiệm hoặc đầu tư số tiền này.');
     }
 
     // Frequency analysis
     final dailySpending = monthlyExpenses.isNotEmpty ? totalSpent / DateTime.now().day : 0.0;
     if (dailySpending > 100000) { // More than 100k per day
-      suggestions.add('Chi tiêu trung bình ${FormatUtils.formatCurrency(dailySpending as double)}/ngày. Hãy lập kế hoạch chi tiêu hợp lý hơn.');
+      suggestions.add('Chi tiêu trung bình ${FormatUtils.formatCurrency(dailySpending, context)}/ngày. Hãy lập kế hoạch chi tiêu hợp lý hơn.');
     }
 
     // Default suggestions if not enough data

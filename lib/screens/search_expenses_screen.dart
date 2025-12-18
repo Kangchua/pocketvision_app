@@ -188,7 +188,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
                         icon: Icon(Icons.date_range),
                         label: Text(
                           _startDate != null && _endDate != null
-                              ? '${FormatUtils.formatDate(_startDate!)} - ${FormatUtils.formatDate(_endDate!)}'
+                              ? '${FormatUtils.formatDate(_startDate!, context)} - ${FormatUtils.formatDate(_endDate!, context)}'
                               : 'Chọn khoảng thời gian',
                         ),
                         style: OutlinedButton.styleFrom(
@@ -392,7 +392,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           children: [
             SizedBox(height: 4),
             Text(
-              FormatUtils.formatDate(expense.expenseDate),
+              FormatUtils.formatDate(expense.expenseDate, context),
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -424,7 +424,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           ],
         ),
         trailing: Text(
-          FormatUtils.formatCurrency(expense.totalAmount),
+          FormatUtils.formatCurrency(expense.totalAmount, context),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,

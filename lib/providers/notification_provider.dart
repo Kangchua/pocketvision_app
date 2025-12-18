@@ -52,10 +52,50 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> markAllAsRead() async {
+    try {
+      await _apiService.markAllNotificationsAsRead();
+      _notifications = _notifications.map((n) => app_notification.AppNotification(
+        id: n.id,
+        userId: n.userId,
+        type: n.type,
+        message: n.message,
+        relatedId: n.relatedId,
+        isRead: true,
+        createdAt: n.createdAt,
+      )).toList();
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<void> deleteNotification(int id) async {
     try {
       await _apiService.deleteNotification(id);
       _notifications.removeWhere((n) => n.id == id);
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> deleteAllNotifications() async {
+    try {
+      // Xóa từng thông báo một (vì backend chưa có endpoint xóa tất cả)
+      final ids = _notifications.map((n) => n.id).toList();
+      for (final id in ids) {
+        try {
+          await _apiService.deleteNotification(id);
+        } catch (e) {
+          // Continue deleting others even if one fails
+        }
+      }
+      _notifications.clear();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -72,5 +112,11 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  List<app_notification.AppNotification> get unreadNotifications => _notifications.where((n) => !n.isRead).toList();
+  List<app_notification.AppNotification> get unreadNotifications => 
+      _notifications.where((n) => !n.isRead).toList();
+
+  List<app_notification.AppNotification> get readNotifications => 
+      _notifications.where((n) => n.isRead).toList();
+
+  int get unreadCount => unreadNotifications.length;
 }

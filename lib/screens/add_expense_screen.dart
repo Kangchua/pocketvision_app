@@ -6,6 +6,8 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Expense? expense;
@@ -46,67 +48,80 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _saveExpense() async {
-    if (_amountController.text.isEmpty ||
-        _noteController.text.isEmpty ||
-        _selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
-      );
+    // Validation
+    if (_amountController.text.trim().isEmpty) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng nhập số tiền');
+      return;
+    }
+
+    final amount = ExceptionHandler.parseAmount(_amountController.text);
+    if (amount == null || amount <= 0) {
+      ExceptionHandler.showErrorSnackBar(context, 'Số tiền phải lớn hơn 0');
+      return;
+    }
+
+    if (_noteController.text.trim().isEmpty) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng nhập ghi chú');
+      return;
+    }
+
+    if (_selectedCategoryId == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng chọn danh mục');
       return;
     }
 
     final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+      return;
+    }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final amount = double.parse(_amountController.text);
-
       if (widget.expense != null) {
         await context.read<ExpenseProvider>().updateExpense(
           id: widget.expense!.id,
           categoryId: _selectedCategoryId!,
-          storeName: _storeNameController.text,
+          storeName: _storeNameController.text.trim().isEmpty 
+              ? null 
+              : _storeNameController.text.trim(),
           totalAmount: amount,
           paymentMethod: _selectedPaymentMethod!,
-          note: _noteController.text,
+          note: _noteController.text.trim(),
           expenseDate: _selectedDate,
         );
       } else {
         await context.read<ExpenseProvider>().addExpense(
           userId: user.id,
           categoryId: _selectedCategoryId!,
-          storeName: _storeNameController.text,
+          storeName: _storeNameController.text.trim().isEmpty 
+              ? null 
+              : _storeNameController.text.trim(),
           totalAmount: amount,
           paymentMethod: _selectedPaymentMethod!,
-          note: _noteController.text,
+          note: _noteController.text.trim(),
           expenseDate: _selectedDate,
         );
       }
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.expense != null
-                ? 'Cập nhật chi tiêu thành công'
-                : 'Thêm chi tiêu thành công'),
-          ),
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          widget.expense != null
+              ? 'Cập nhật chi tiêu thành công'
+              : 'Thêm chi tiêu thành công',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -136,15 +151,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         await context.read<ExpenseProvider>().deleteExpense(widget.expense!.id);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Xóa chi tiêu thành công')),
-          );
+          ExceptionHandler.showSuccessSnackBar(context, 'Xóa chi tiêu thành công');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: $e')),
-          );
+          ExceptionHandler.showErrorSnackBar(context, e);
         }
       }
     }
@@ -153,15 +164,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text(widget.expense != null ? 'Cập nhật chi tiêu' : 'Thêm chi tiêu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           if (widget.expense != null)
             IconButton(
-              icon: Icon(Icons.delete, color: AppColors.danger),
+              icon: Icon(Icons.delete, color: ThemeColors.getDanger(context)),
               onPressed: _deleteExpense,
             ),
         ],
@@ -206,7 +216,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             // Payment Method
             DropdownButtonFormField<String>(
-              value: _selectedPaymentMethod,
+              initialValue: _selectedPaymentMethod,
               decoration: InputDecoration(
                 labelText: 'Phương thức thanh toán',
                 prefixIcon: Icon(Icons.payment),
@@ -253,7 +263,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     Icon(Icons.calendar_today, color: AppColors.textTertiary),
                     SizedBox(width: 12),
                     Text(
-                      FormatUtils.formatDate(_selectedDate),
+                      FormatUtils.formatDate(_selectedDate, context),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],

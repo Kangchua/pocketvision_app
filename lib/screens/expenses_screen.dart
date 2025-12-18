@@ -5,6 +5,8 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/exception_handler.dart';
+import '../utils/theme_colors.dart';
 import 'add_expense_screen.dart';
 
 class ExpensesScreen extends StatefulWidget {
@@ -23,22 +25,45 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Future<void> _loadExpenses() async {
     final user = context.read<AuthProvider>().user;
-    if (user != null) {
+    if (user == null) return;
+
+    try {
       await context.read<ExpenseProvider>().fetchExpenses(user.id);
+      final error = context.read<ExpenseProvider>().error;
+      if (error != null && mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $error'),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi tải dữ liệu: $e'),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Chi tiêu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.textPrimary),
+            icon: Icon(Icons.refresh),
             onPressed: _loadExpenses,
           ),
         ],
@@ -55,12 +80,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.receipt_long,
-                      size: 64, color: AppColors.textLight),
+                      size: 64, color: ThemeColors.getTextLight(context)),
                   SizedBox(height: 16),
                   Text(
                     'Chưa có chi tiêu nào',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                   ),
                 ],
@@ -86,7 +111,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     alignment: Alignment.centerRight,
                     padding: EdgeInsets.only(right: 20),
                     decoration: BoxDecoration(
-                      color: AppColors.danger,
+                      color: ThemeColors.getDanger(context),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -108,7 +133,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: Text('Xóa', style: TextStyle(color: AppColors.danger)),
+                            child: Text('Xóa', style: TextStyle(color: ThemeColors.getDanger(context))),
                           ),
                         ],
                       ),
@@ -119,14 +144,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     try {
                       await context.read<ExpenseProvider>().deleteExpense(expense.id);
                       if (mounted) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Xóa chi tiêu thành công')),
+                          SnackBar(
+                            content: const Text('Xóa chi tiêu thành công'),
+                            backgroundColor: ThemeColors.getSuccess(context),
+                            duration: const Duration(seconds: 2),
+                          ),
                         );
                       }
                     } catch (e) {
                       if (mounted) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Lỗi: $e')),
+                          SnackBar(
+                            content: Text('Lỗi: ${ExceptionHandler.getErrorMessage(e)}'),
+                            backgroundColor: ThemeColors.getDanger(context),
+                            duration: const Duration(seconds: 4),
+                          ),
                         );
                       }
                     }
@@ -143,9 +178,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: ThemeColors.getSurface(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: ThemeColors.getBorder(context)),
                       ),
                       padding: const EdgeInsets.all(16),
                       child: Row(
@@ -180,18 +215,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  FormatUtils.formatDate(expense.expenseDate),
+                                  FormatUtils.formatDate(expense.expenseDate, context),
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
                             ),
                           ),
-                          Text(
-                            FormatUtils.formatCurrency(expense.totalAmount),
+                            Text(
+                            FormatUtils.formatCurrency(expense.totalAmount, context),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.danger,
+                              color: ThemeColors.getDanger(context),
                             ),
                           ),
                         ],
@@ -206,7 +241,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('add_expense_fab'),
-        backgroundColor: AppColors.primary,
         onPressed: () {
           Navigator.push(
             context,

@@ -7,6 +7,7 @@ import '../providers/budget_provider.dart';
 import '../providers/notification_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 import 'expenses_screen.dart';
 import 'budgets_screen.dart';
 import 'invoices_screen.dart';
@@ -65,15 +66,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('PocketVision'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.surface,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: AppColors.textPrimary),
+            icon: Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -120,16 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: Drawer(
         child: Container(
-          color: AppColors.surface,
+          color: ThemeColors.getSurface(context),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: ThemeColors.getSurface(context),
                   border: Border(
                     bottom: BorderSide(
-                      color: AppColors.border,
+                      color: ThemeColors.getBorder(context),
                       width: 1,
                     ),
                   ),
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: ThemeColors.getPrimary(context),
                       child: Icon(
                         Icons.person,
                         size: 30,
@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Text(
                           user?.fullName ?? 'Người dùng',
                           style: TextStyle(
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.search, color: AppColors.textPrimary),
+                leading: Icon(Icons.search, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Tìm kiếm chi tiêu'),
                 onTap: () {
                   Navigator.pop(context);
@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.smart_toy, color: AppColors.textPrimary),
+                leading: Icon(Icons.smart_toy, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Gợi ý AI'),
                 onTap: () {
                   Navigator.pop(context);
@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.category, color: AppColors.textPrimary),
+                leading: Icon(Icons.category, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Danh mục'),
                 onTap: () {
                   Navigator.pop(context);
@@ -197,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.upload_file, color: AppColors.textPrimary),
+                leading: Icon(Icons.upload_file, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Upload hóa đơn'),
                 onTap: () {
                   Navigator.pop(context);
@@ -208,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.edit_note, color: AppColors.textPrimary),
+                leading: Icon(Icons.edit_note, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Điền chi tiêu'),
                 onTap: () {
                   Navigator.pop(context);
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Divider(),
               ListTile(
-                leading: Icon(Icons.notifications, color: AppColors.textPrimary),
+                leading: Icon(Icons.notifications, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Thông báo'),
                 onTap: () {
                   Navigator.pop(context);
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.person, color: AppColors.textPrimary),
+                leading: Icon(Icons.person, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Tài khoản'),
                 onTap: () {
                   Navigator.pop(context);
@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.settings, color: AppColors.textPrimary),
+                leading: Icon(Icons.settings, color: ThemeColors.getTextPrimary(context)),
                 title: Text('Cài đặt'),
                 onTap: () {
                   Navigator.pop(context);
@@ -254,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Divider(),
               ListTile(
-                leading: Icon(Icons.logout, color: AppColors.danger),
+                leading: Icon(Icons.logout, color: ThemeColors.getDanger(context)),
                 title: Text('Đăng xuất'),
                 onTap: () {
                   context.read<AuthProvider>().logout();
@@ -290,50 +290,52 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header Section như web
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tổng quan chi tiêu',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          foreground: Paint()
-                            ..shader = LinearGradient(
-                              colors: [AppColors.primary, AppColors.primary.withOpacity(0.6)],
-                            ).createShader(Rect.fromLTWH(0, 0, 200, 70)),
-                        ),
-                      ),
-                      Text(
-                        'Số liệu tài chính tháng ${currentMonth.month}/${currentMonth.year} của bạn',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                      ),
-                    ],
+                  Text(
+                    'Tổng quan chi tiêu',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: ThemeColors.getPrimary(context),
+                    ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Số liệu tài chính tháng ${currentMonth.month}/${currentMonth.year} của bạn',
+                    style: TextStyle(color: ThemeColors.getTextSecondary(context), fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.refresh, color: AppColors.primary),
-                        onPressed: _loadData,
-                      ),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: const Text('Thêm chi tiêu'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 4,
-                          shadowColor: AppColors.primary.withOpacity(0.3),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add, size: 20),
+                          label: const Text('Thêm chi tiêu'),
+                          style: ElevatedButton.styleFrom(
+                            elevation: 2,
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+                            );
+                          },
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
-                          );
-                        },
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.refresh, color: ThemeColors.getPrimary(context)),
+                        onPressed: _loadData,
+                        style: IconButton.styleFrom(
+                          backgroundColor: ThemeColors.getSurfaceLight(context),
+                          padding: const EdgeInsets.all(12),
+                        ),
                       ),
                     ],
                   ),
@@ -367,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildStatCard(
                     title: 'Ngân sách tháng',
                     value: totalBudget,
-                    description: 'Đã dùng: ${FormatUtils.formatCurrency(budgetUsed)}',
+                    description: 'Đã dùng: ${FormatUtils.formatCurrency(budgetUsed, context)}',
                     icon: Icons.savings,
                     iconColor: Colors.blue,
                     valueColor: Colors.blue,
@@ -382,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Quick Actions như web
               Text(
@@ -436,7 +438,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // Budget Warnings
+              const SizedBox(height: 24),
               ..._buildBudgetWarnings(budgetProvider),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -454,9 +458,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -476,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: ThemeColors.getTextSecondary(context),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -492,11 +496,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 12),
           Text(
-            FormatUtils.formatCurrency(value),
+            FormatUtils.formatCurrency(value, context),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: valueColor ?? AppColors.primary,
+              color: valueColor ?? ThemeColors.getPrimary(context),
             ),
           ),
           SizedBox(height: 4),
@@ -504,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
             description,
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: ThemeColors.getTextSecondary(context),
             ),
           ),
         ],
@@ -522,9 +526,9 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: ThemeColors.getSurface(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: ThemeColors.getBorder(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -542,10 +546,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: ThemeColors.getPrimary(context).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: AppColors.primary, size: 20),
+                  child: Icon(icon, color: ThemeColors.getPrimary(context), size: 20),
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -554,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: ThemeColors.getTextPrimary(context),
                     ),
                   ),
                 ),
@@ -565,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> {
               description,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: ThemeColors.getTextSecondary(context),
                 height: 1.4,
               ),
             ),
@@ -574,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> {
               alignment: Alignment.centerRight,
               child: Icon(
                 Icons.arrow_forward,
-                color: AppColors.primary,
+                color: ThemeColors.getPrimary(context),
                 size: 16,
               ),
             ),
@@ -625,24 +629,24 @@ class _HomeScreenState extends State<HomeScreen> {
       if (percentage >= 80) { // Warning threshold
         warnings.add(
           Container(
-            margin: EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: percentage > 100 ? AppColors.danger.withOpacity(0.1) : AppColors.warning.withOpacity(0.1),
+              color: percentage > 100 ? ThemeColors.getDanger(context).withOpacity(0.1) : ThemeColors.getWarning(context).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: percentage > 100 ? AppColors.danger : AppColors.warning,
+                color: percentage > 100 ? ThemeColors.getDanger(context) : ThemeColors.getWarning(context),
                 width: 1,
               ),
             ),
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Icon(
                   percentage > 100 ? Icons.warning : Icons.warning_amber,
-                  color: percentage > 100 ? AppColors.danger : AppColors.warning,
+                  color: percentage > 100 ? ThemeColors.getDanger(context) : ThemeColors.getWarning(context),
                   size: 24,
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,25 +654,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         percentage > 100 ? 'Vượt ngân sách!' : 'Gần đạt giới hạn',
                         style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: percentage > 100 ? AppColors.danger : AppColors.warning,
+                          color: percentage > 100 ? ThemeColors.getDanger(context) : ThemeColors.getWarning(context),
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Danh mục ${budget.categoryId}: ${percentage.toStringAsFixed(1)}% đã sử dụng',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: ThemeColors.getTextSecondary(context),
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  '${FormatUtils.formatCurrency(budget.spentAmount)} / ${FormatUtils.formatCurrency(budget.limitAmount)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: percentage > 100 ? AppColors.danger : AppColors.warning,
+                Flexible(
+                  child: Text(
+                    '${FormatUtils.formatCurrency(budget.spentAmount, context)} / ${FormatUtils.formatCurrency(budget.limitAmount, context)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: percentage > 100 ? ThemeColors.getDanger(context) : ThemeColors.getWarning(context),
+                    ),
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

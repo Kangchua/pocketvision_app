@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/invoice_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
 import 'add_invoice_screen.dart';
 
 class InvoicesScreen extends StatefulWidget {
@@ -28,26 +28,26 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         await context.read<InvoiceProvider>().fetchInvoices(user.id);
         final error = context.read<InvoiceProvider>().error;
         if (error != null && mounted) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: $error'),
-              backgroundColor: AppColors.danger,
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: $e'),
-              backgroundColor: AppColors.danger,
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Lỗi: $error'),
+                backgroundColor: ThemeColors.getDanger(context),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Lỗi: $e'),
+                backgroundColor: ThemeColors.getDanger(context),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
       }
     }
   }
@@ -55,14 +55,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Hóa đơn'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.textPrimary),
+            icon: Icon(Icons.refresh),
             onPressed: _loadInvoices,
           ),
         ],
@@ -79,12 +78,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.receipt_long,
-                      size: 64, color: AppColors.textLight),
+                      size: 64, color: ThemeColors.getTextLight(context)),
                   SizedBox(height: 16),
                   Text(
                     'Chưa có hóa đơn nào',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textTertiary,
+                      color: ThemeColors.getTextTertiary(context),
                     ),
                   ),
                 ],
@@ -116,9 +115,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -138,11 +137,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                               ),
                             ),
                             Text(
-                              FormatUtils.formatCurrency(invoice.totalAmount),
+                              FormatUtils.formatCurrency(invoice.totalAmount, context),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
+                                color: ThemeColors.getPrimary(context),
                               ),
                             ),
                           ],
@@ -150,17 +149,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.store,
                               size: 16,
-                              color: AppColors.textSecondary,
+                              color: ThemeColors.getTextSecondary(context),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 category?.name ?? 'Không phân loại',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: ThemeColors.getTextSecondary(context),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -171,29 +170,29 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.calendar_today,
                               size: 16,
-                              color: AppColors.textSecondary,
+                              color: ThemeColors.getTextSecondary(context),
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              FormatUtils.formatDate(invoice.invoiceDate),
+                              FormatUtils.formatDate(invoice.invoiceDate, context),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: ThemeColors.getTextSecondary(context),
                               ),
                             ),
                             const SizedBox(width: 16),
-                            const Icon(
+                            Icon(
                               Icons.payment,
                               size: 16,
-                              color: AppColors.textSecondary,
+                              color: ThemeColors.getTextSecondary(context),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _getPaymentMethodText(invoice.paymentMethod),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: ThemeColors.getTextSecondary(context),
                               ),
                             ),
                           ],
@@ -203,7 +202,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                           Text(
                             invoice.note!,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textTertiary,
+                              color: ThemeColors.getTextTertiary(context),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -220,7 +219,6 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('add_invoice_fab'),
-        backgroundColor: AppColors.primary,
         onPressed: () {
           Navigator.push(
             context,

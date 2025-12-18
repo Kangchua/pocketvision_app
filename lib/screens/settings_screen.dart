@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/currency_provider.dart';
+import '../providers/language_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/theme_colors.dart';
 import 'edit_profile_screen.dart';
 import 'security_screen.dart';
 import 'help_screen.dart';
@@ -18,8 +22,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _biometricEnabled = false;
-  String _currency = 'VND';
-  String _language = 'vi';
 
   @override
   void initState() {
@@ -28,12 +30,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    // Settings are now managed by providers
+    // Only load local settings here
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
       _biometricEnabled = prefs.getBool('biometric_enabled') ?? false;
-      _currency = prefs.getString('currency') ?? 'VND';
-      _language = prefs.getString('language') ?? 'vi';
     });
   }
 
@@ -58,11 +60,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Cài đặt'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -102,6 +103,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // Preferences Section
             _buildSectionHeader('Tùy chỉnh'),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return _buildSwitchCard(
+                  icon: themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                  title: 'Chế độ tối',
+                  subtitle: themeProvider.isDarkMode ? 'Bật chế độ tối' : 'Tắt chế độ tối',
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) {
+                    themeProvider.toggleTheme();
+                  },
+                );
+              },
+            ),
             _buildSwitchCard(
               icon: Icons.notifications,
               title: 'Thông báo',
@@ -112,27 +126,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _saveSetting('notifications_enabled', value);
               },
             ),
-            _buildDropdownCard(
-              icon: Icons.attach_money,
-              title: 'Đơn vị tiền tệ',
-              subtitle: 'Chọn đơn vị tiền tệ hiển thị',
-              value: _currency,
-              items: ['VND', 'USD', 'EUR'],
-              onChanged: (value) {
-                setState(() => _currency = value!);
-                _saveSetting('currency', value);
+            Consumer<CurrencyProvider>(
+              builder: (context, currencyProvider, _) {
+                return _buildDropdownCard(
+                  icon: Icons.attach_money,
+                  title: 'Đơn vị tiền tệ',
+                  subtitle: currencyProvider.getCurrencyName(),
+                  value: currencyProvider.currency,
+                  items: ['VND', 'USD', 'EUR', 'JPY', 'GBP', 'CNY'],
+                  itemLabels: [
+                    'Vietnamese Dong (₫)',
+                    'US Dollar (\$)',
+                    'Euro (€)',
+                    'Japanese Yen (¥)',
+                    'British Pound (£)',
+                    'Chinese Yuan (¥)',
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      currencyProvider.setCurrency(value);
+                    }
+                  },
+                );
               },
             ),
-            _buildDropdownCard(
-              icon: Icons.language,
-              title: 'Ngôn ngữ',
-              subtitle: 'Chọn ngôn ngữ hiển thị',
-              value: _language,
-              items: ['vi', 'en'],
-              itemLabels: ['Tiếng Việt', 'English'],
-              onChanged: (value) {
-                setState(() => _language = value!);
-                _saveSetting('language', value);
+            Consumer<LanguageProvider>(
+              builder: (context, languageProvider, _) {
+                return _buildDropdownCard(
+                  icon: Icons.language,
+                  title: 'Ngôn ngữ',
+                  subtitle: languageProvider.getLanguageName(),
+                  value: languageProvider.language,
+                  items: ['vi', 'en'],
+                  itemLabels: ['Tiếng Việt', 'English'],
+                  onChanged: (value) {
+                    if (value != null) {
+                      languageProvider.setLanguage(value);
+                    }
+                  },
+                );
               },
             ),
 
@@ -209,14 +241,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ElevatedButton(
               onPressed: _logout,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.danger,
+                backgroundColor: ThemeColors.getDanger(context),
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
-                shadowColor: AppColors.danger.withOpacity(0.3),
+                shadowColor: ThemeColors.getDanger(context).withOpacity(0.3),
               ),
               child: Text(
                 'Đăng xuất',
@@ -239,7 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: ThemeColors.getTextPrimary(context),
         ),
       ),
     );
@@ -256,9 +288,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -271,27 +303,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary),
+          child: Icon(icon, color: ThemeColors.getPrimary(context)),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: textColor ?? AppColors.textPrimary,
+            color: textColor ?? ThemeColors.getTextPrimary(context),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
           ),
         ),
-        trailing: showArrow ? Icon(Icons.chevron_right, color: AppColors.textSecondary) : null,
+        trailing: showArrow ? Icon(Icons.chevron_right, color: ThemeColors.getTextSecondary(context)) : null,
         onTap: onTap,
       ),
     );
@@ -307,9 +339,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -322,30 +354,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary),
+          child: Icon(icon, color: ThemeColors.getPrimary(context)),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: ThemeColors.getTextPrimary(context),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
           ),
         ),
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: AppColors.primary,
+          activeThumbColor: ThemeColors.getPrimary(context),
         ),
       ),
     );
@@ -363,9 +395,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeColors.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -378,24 +410,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: ThemeColors.getPrimary(context).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary),
+          child: Icon(icon, color: ThemeColors.getPrimary(context)),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: ThemeColors.getTextPrimary(context),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
           ),
         ),
         children: [
@@ -406,11 +438,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                 ),
               ),
               items: items.map((item) {

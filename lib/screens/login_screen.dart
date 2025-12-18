@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,21 +26,31 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng nhập email và mật khẩu')),
-      );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // Validation
+    if (email.isEmpty || password.isEmpty) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng nhập email và mật khẩu');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (!ExceptionHandler.isValidEmail(email)) {
+      ExceptionHandler.showErrorSnackBar(context, 'Email không hợp lệ');
+      return;
+    }
+
+    if (password.length < 6) {
+      ExceptionHandler.showErrorSnackBar(context, 'Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
       await context.read<AuthProvider>().login(
-            email: _emailController.text,
-            password: _passwordController.text,
+            email: email,
+            password: password,
           );
 
       if (mounted && context.mounted) {
@@ -48,15 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi đăng nhập: $e')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }

@@ -4,6 +4,7 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/category.dart';
 import '../utils/app_theme.dart';
+import '../utils/exception_handler.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -47,7 +48,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> _loadCategories() async {
-    await context.read<CategoryProvider>().fetchCategories();
+    try {
+      await context.read<CategoryProvider>().fetchCategories();
+      final error = context.read<CategoryProvider>().error;
+      if (error != null && mounted) {
+        ExceptionHandler.showErrorSnackBar(context, error);
+      }
+    } catch (e) {
+      if (mounted) {
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    }
   }
 
   void _showAddCategoryDialog() {
@@ -146,22 +157,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         icon: _iconController.text.trim().isEmpty ? 'category' : _iconController.text.trim(),
       );
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Thêm danh mục thành công'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      ExceptionHandler.showSuccessSnackBar(context, 'Thêm danh mục thành công');
     } catch (e) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: ${e.toString()}'),
-          backgroundColor: AppColors.danger,
-          duration: Duration(seconds: 4),
-        ),
-      );
+      ExceptionHandler.showErrorSnackBar(context, e);
     }
   }
 
@@ -274,12 +272,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           }
 
           return GridView.builder(
-            padding: EdgeInsets.all(16),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.9,
             ),
             itemCount: categoryProvider.categories.length,
             itemBuilder: (context, index) {
@@ -304,7 +302,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -315,46 +313,56 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           onTap: () {
             // Navigate to category details or edit
           },
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.delete, color: AppColors.danger, size: 20),
-                      onPressed: () => _deleteCategory(category),
-                      padding: EdgeInsets.all(4),
-                      constraints: BoxConstraints(),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getIconData(category.icon ?? 'category'),
+                        color: color,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _getIconData(category.icon ?? 'category'),
-                    color: color,
-                    size: 32,
-                  ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton(
+                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 18),
+                  onPressed: () => _deleteCategory(category),
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                  visualDensity: VisualDensity.compact,
                 ),
-                SizedBox(height: 12),
-                Text(
-                  category.name,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -397,21 +405,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       try {
         await context.read<CategoryProvider>().deleteCategory(category.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Xóa danh mục thành công'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ExceptionHandler.showSuccessSnackBar(context, 'Xóa danh mục thành công');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: ${e.toString()}'),
-              backgroundColor: AppColors.danger,
-            ),
-          );
+          ExceptionHandler.showErrorSnackBar(context, e);
         }
       }
     }

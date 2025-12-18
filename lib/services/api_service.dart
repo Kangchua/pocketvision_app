@@ -575,6 +575,14 @@ class ApiService {
     }
   }
 
+  Future<void> markAllNotificationsAsRead() async {
+    try {
+      await _dio.patch('/notifications/read-all');
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<void> deleteNotification(int id) async {
     try {
       await _dio.delete('/notifications/$id');
