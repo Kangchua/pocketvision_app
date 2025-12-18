@@ -30,16 +30,26 @@ jobs:
     - name: Build iOS (no codesign)
       run: flutter build ios --release --no-codesign
     
+    - name: List build output
+      run: |
+        echo "📁 Checking build output..."
+        ls -la build/ios/ || echo "build/ios/ not found"
+        ls -la build/ios/iphoneos/ || echo "build/ios/iphoneos/ not found"
+        find build/ios -name "Runner.app" -type d || echo "Runner.app not found"
+    
     - name: Create IPA archive
       run: |
-        mkdir -p build/ios/ipa
         if [ -d "build/ios/iphoneos/Runner.app" ]; then
+          echo "📦 Creating IPA archive..."
           cd build/ios/iphoneos
-          zip -r ../../ipa/Runner.app.zip Runner.app
+          zip -r Runner.app.zip Runner.app
+          mv Runner.app.zip ../../Runner.app.zip
           cd ../../..
-          echo "✅ IPA archive created successfully"
+          echo "✅ IPA archive created: build/ios/Runner.app.zip"
         else
-          echo "⚠️ Runner.app not found, skipping IPA creation"
+          echo "⚠️ Runner.app not found at build/ios/iphoneos/Runner.app"
+          echo "📁 Available files:"
+          find build/ios -type f -o -type d | head -20
         fi
     
     - name: Upload iOS build artifact
@@ -48,6 +58,7 @@ jobs:
         name: ios-build
         path: |
           build/ios/iphoneos/Runner.app
+          build/ios/Runner.app.zip
         if-no-files-found: warn
         retention-days: 7  # Giữ file trong 7 ngày
     
