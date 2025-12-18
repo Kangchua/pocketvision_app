@@ -16,7 +16,7 @@ class ApiConfig {
   /// - 192.168.x.x: Dùng cho device thật (iPhone/Android)
   /// 
   /// Ví dụ: '192.168.1.100' hoặc '192.168.0.5'
-  static const String serverIp = '192.168.100.194';
+  static const String serverIp = '192.168.2.8';
   
   /// Port của backend server (theo application.properties)
   static const int serverPort = 8081;

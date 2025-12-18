@@ -488,7 +488,7 @@ class ApiService {
   /// Gửi ảnh đến AI server để trích xuất thông tin hóa đơn
   Future<Map<String, dynamic>> extractInvoiceFromImage(File imageFile) async {
     try {
-      final aiServerUrl = 'http://192.168.100.117:8000/extract_invoice';
+      final aiServerUrl = 'http://192.168.2.8:8000/extract_invoice';
       
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
