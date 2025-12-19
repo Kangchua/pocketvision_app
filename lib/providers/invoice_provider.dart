@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/invoice.dart';
 import '../services/api_service.dart';
@@ -114,15 +115,26 @@ class InvoiceProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> uploadInvoice(int userId, dynamic imageFile) async {
+  /// Upload invoice image to backend
+  /// Backend will automatically call AI server to extract invoice information
+  /// Returns the Invoice object with extracted data
+  Future<Invoice> uploadInvoice(int userId, File imageFile) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      final invoice = await _apiService.uploadInvoice(userId, imageFile.path);
+      final invoice = await _apiService.uploadInvoice(userId, imageFile);
       _invoices.add(invoice);
       notifyListeners();
+      return invoice;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

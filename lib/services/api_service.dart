@@ -547,55 +547,29 @@ class ApiService {
   }
 
   /// Gửi ảnh đến AI server để trích xuất thông tin hóa đơn
-  Future<Map<String, dynamic>> extractInvoiceFromImage(File imageFile) async {
+  /// Upload invoice image to backend
+  /// Backend will automatically call AI server to extract invoice information
+  /// Returns the Invoice object with extracted data
+  Future<Invoice> uploadInvoice(int userId, File imageFile) async {
     try {
-      final aiServerUrl = 'http://192.168.2.8:8000/extract_invoice';
+      // Get file name from path
+      final fileName = imageFile.path.split('/').last;
       
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          imageFile.path,
-          filename: 'invoice.jpg',
-        ),
-      });
-
-      final dio = Dio(BaseOptions(
-        connectTimeout: Duration(seconds: 30),
-        receiveTimeout: Duration(seconds: 30),
-      ));
-
-      final response = await dio.post(
-        aiServerUrl,
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-          headers: {
-            'Accept': 'application/json',
-          },
-        ),
-      );
-
-      if (response.data is Map) {
-        return response.data as Map<String, dynamic>;
-      }
-      return {};
-    } catch (e) {
-      print('AI Server Error: $e');
-      // Không throw error, chỉ log để không block upload
-      return {};
-    }
-  }
-
-  Future<Invoice> uploadInvoice(int userId, String imagePath) async {
-    try {
-      final formData = FormData.fromMap({
         'userId': userId,
-        'file': await MultipartFile.fromFile(imagePath, filename: 'invoice.jpg'),
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: fileName,
+        ),
       });
 
       final response = await _dio.post(
         '/invoices/upload',
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(
+          contentType: 'multipart/form-data',
+          receiveTimeout: Duration(seconds: 60), // AI processing may take time
+        ),
       );
 
       return Invoice.fromJson(response.data);

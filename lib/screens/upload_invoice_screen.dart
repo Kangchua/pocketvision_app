@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../providers/invoice_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme_colors.dart';
-import '../services/api_service.dart';
 import '../utils/exception_handler.dart';
+import 'camera_screen.dart';
 
 class UploadInvoiceScreen extends StatefulWidget {
   const UploadInvoiceScreen({super.key});
@@ -59,7 +59,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
               title: Text('Chụp ảnh'),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.camera);
+                _openCamera();
               },
             ),
             ListTile(
@@ -76,6 +76,21 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
     );
   }
 
+  Future<void> _openCamera() async {
+    final result = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CameraScreen(),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedImage = XFile(result.path);
+      });
+    }
+  }
+
   Future<void> _uploadInvoice() async {
     if (_selectedImage == null) return;
 
@@ -89,7 +104,7 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
     try {
       final imageFile = File(_selectedImage!.path);
       
-      // Gửi ảnh đến AI server để trích xuất thông tin
+      // Hiển thị loading message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -98,39 +113,42 @@ class _UploadInvoiceScreenState extends State<UploadInvoiceScreen> {
                 SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
                 SizedBox(width: 12),
-                Text('Đang trích xuất thông tin từ AI...'),
+                Expanded(
+                  child: Text('Đang phân tích hóa đơn bằng AI...'),
+                ),
               ],
             ),
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-
-      final apiService = ApiService();
-      final extractedData = await apiService.extractInvoiceFromImage(imageFile);
-      
-      if (mounted && extractedData.isNotEmpty) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đã trích xuất thông tin từ AI. Đang upload...'),
-            duration: Duration(seconds: 2),
+            duration: Duration(seconds: 30), // AI processing may take time
           ),
         );
       }
 
       // Upload hóa đơn lên backend
-      await context.read<InvoiceProvider>().uploadInvoice(
+      // Backend sẽ tự động gọi AI server để trích xuất thông tin
+      final invoice = await context.read<InvoiceProvider>().uploadInvoice(
         user.id,
         imageFile,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ExceptionHandler.showSuccessSnackBar(context, 'Upload hóa đơn thành công');
+        
+        // Hiển thị thông tin đã trích xuất
+        final storeName = invoice.storeName ?? 'Cửa hàng';
+        final totalAmount = invoice.totalAmount;
+        
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          '✅ Phân tích thành công!\nĐã trích xuất hóa đơn từ "$storeName" với tổng tiền ${totalAmount.toStringAsFixed(0)}đ',
+        );
+        
+        // Quay lại màn hình trước (hoặc có thể điều hướng đến màn hình chi tiết invoice)
         Navigator.pop(context);
       }
     } catch (e) {

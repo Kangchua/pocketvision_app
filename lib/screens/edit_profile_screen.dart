@@ -5,6 +5,7 @@ import 'dart:io';
 import '../providers/auth_provider.dart';
 import '../utils/exception_handler.dart';
 import '../utils/theme_colors.dart';
+import 'camera_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -55,7 +56,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               title: const Text('Chụp ảnh'),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.camera);
+                _openCamera();
               },
             ),
             ListTile(
@@ -82,6 +83,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openCamera() async {
+    final result = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CameraScreen(),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedImage = result;
+      });
+      // Tự động upload ảnh khi chụp
+      await _uploadAndSaveProfile();
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
