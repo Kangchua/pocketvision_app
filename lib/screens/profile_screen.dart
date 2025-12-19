@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme_colors.dart';
+import '../config/api_config.dart';
 import 'edit_profile_screen.dart';
 import 'security_screen.dart';
 import 'settings_screen.dart';
@@ -42,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
                         radius: 48,
                         backgroundColor: ThemeColors.getPrimary(context),
                         backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                            ? NetworkImage(user.avatarUrl!)
+                            ? NetworkImage(ApiConfig.buildImageUrl(user.avatarUrl))
                             : null,
                         child: user.avatarUrl == null || user.avatarUrl!.isEmpty
                             ? Text(

@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../utils/exception_handler.dart';
 import '../utils/theme_colors.dart';
+import '../config/api_config.dart';
 import 'camera_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -128,30 +130,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _uploadAndSaveProfile() async {
     if (_selectedImage == null) return;
 
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.user;
+    if (user == null) return;
+
     setState(() {
       _isUploadingImage = true;
     });
 
     try {
-      // Upload ảnh lên server (giả sử có endpoint upload)
-      // Hoặc convert sang base64 và gửi kèm trong updateProfile
-      // Ở đây tôi sẽ giả định backend hỗ trợ upload file
-      // Nếu không, có thể cần thêm API endpoint upload avatar
+      // Upload ảnh lên server
+      final apiService = ApiService();
+      final avatarUrl = await apiService.uploadAvatar(user.id, user.id, _selectedImage!);
       
-      // Tạm thời, chúng ta sẽ lưu đường dẫn local và gửi URL
-      // Trong thực tế, cần upload file lên server trước
-      // Nếu backend yêu cầu URL, có thể cần upload file trước
-      // Ở đây tôi sẽ giả định backend chấp nhận file path hoặc cần upload riêng
-      // Vì API hiện tại chỉ nhận avatarUrl (string), nên cần upload file trước
-      
-      // Tạm thời bỏ qua upload file, chỉ lưu local path
-      // TODO: Implement actual file upload to server
-      
-      setState(() {
-        _isUploadingImage = false;
-      });
-      
-      ExceptionHandler.showSuccessSnackBar(context, 'Đã chọn ảnh. Vui lòng lưu để cập nhật.');
+      // Cập nhật profile với avatarUrl mới
+      await authProvider.updateProfile(
+        fullName: _fullNameController.text.trim(),
+        avatarUrl: avatarUrl,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+        ExceptionHandler.showSuccessSnackBar(context, 'Đã cập nhật ảnh đại diện thành công');
+      }
     } catch (e) {
       setState(() {
         _isUploadingImage = false;
@@ -173,27 +176,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
+      final user = authProvider.user;
+      if (user == null) {
+        ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
       
       // Nếu có ảnh mới được chọn, cần upload lên server trước
-      // Ở đây tôi giả định backend có endpoint upload avatar
-      // Hoặc có thể convert sang base64
       String? avatarUrl;
       
       if (removeAvatar) {
         avatarUrl = '';
       } else if (_selectedImage != null) {
-        // TODO: Upload file to server and get URL
-        // Tạm thời, nếu backend chấp nhận base64, có thể convert
-        // Hoặc cần gọi API upload riêng
-        // Ở đây tôi sẽ giả định đã có URL sau khi upload
-        ExceptionHandler.showErrorSnackBar(
-          context, 
-          'Tính năng upload ảnh cần endpoint upload từ backend. Vui lòng liên hệ admin.',
-        );
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+        // Upload file to server and get URL
+        final apiService = ApiService();
+        avatarUrl = await apiService.uploadAvatar(user.id, user.id, _selectedImage!);
       }
       
       await authProvider.updateProfile(
@@ -254,7 +254,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               backgroundImage: _selectedImage != null
                                   ? FileImage(_selectedImage!) as ImageProvider
                                   : (user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                                      ? NetworkImage(user.avatarUrl!) as ImageProvider
+                                      ? NetworkImage(ApiConfig.buildImageUrl(user.avatarUrl)) as ImageProvider
                                       : null),
                               child: _selectedImage == null && 
                                      (user.avatarUrl == null || user.avatarUrl!.isEmpty)

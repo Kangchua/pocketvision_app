@@ -54,10 +54,15 @@ class _CameraScreenState extends State<CameraScreen> {
     if (_cameras == null || cameraIndex >= _cameras!.length) return;
 
     final camera = _cameras![cameraIndex];
+    
+    // Dispose controller cũ nếu có
+    await _controller?.dispose();
+    
     _controller = CameraController(
       camera,
       ResolutionPreset.high,
       enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.jpeg, // Đảm bảo format JPEG cho tất cả platform
     );
 
     try {
@@ -70,8 +75,13 @@ class _CameraScreenState extends State<CameraScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khởi tạo camera: ${e.toString()}')),
+          SnackBar(
+            content: Text('Lỗi khởi tạo camera: ${e.toString()}'),
+            duration: Duration(seconds: 3),
+          ),
         );
+        // Quay lại màn hình trước nếu không khởi tạo được
+        Navigator.pop(context);
       }
     }
   }
@@ -90,6 +100,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _takePicture() async {
     if (!_isInitialized || _controller == null || !_controller!.value.isInitialized) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera chưa sẵn sàng. Vui lòng đợi...')),
+        );
+      }
       return;
     }
 
@@ -100,20 +115,63 @@ class _CameraScreenState extends State<CameraScreen> {
     });
 
     try {
-      final XFile image = await _controller!.takePicture();
+      // Chụp ảnh
+      final XFile capturedImage = await _controller!.takePicture();
+      
+      // Trên iOS, file path có thể gây lỗi "_Namespace"
+      // Sử dụng trực tiếp path từ XFile, nếu lỗi thì đọc bytes
+      File imageFile;
+      
+      try {
+        // Thử sử dụng file path trực tiếp
+        imageFile = File(capturedImage.path);
+        
+        // Kiểm tra file có tồn tại và có thể đọc được không
+        if (await imageFile.exists()) {
+          final bytes = await imageFile.readAsBytes();
+          if (bytes.isEmpty) {
+            throw Exception('File ảnh rỗng');
+          }
+          // File hợp lệ, sử dụng trực tiếp
+        } else {
+          throw Exception('File không tồn tại');
+        }
+      } catch (e) {
+        // Nếu không thể truy cập file path trực tiếp (iOS _Namespace error)
+        // Đọc bytes từ XFile và tạo file tạm
+        try {
+          final bytes = await capturedImage.readAsBytes();
+          if (bytes.isEmpty) {
+            throw Exception('Không thể đọc dữ liệu ảnh');
+          }
+          
+          // Tạo file tạm từ bytes
+          // Trên mobile, sử dụng path từ XFile làm fallback
+          // Tạo tên file unique
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final tempPath = '${capturedImage.path}_temp_$timestamp.jpg';
+          imageFile = File(tempPath);
+          
+          // Ghi bytes vào file
+          await imageFile.writeAsBytes(bytes);
+        } catch (readError) {
+          // Nếu vẫn lỗi, thử dùng path gốc
+          imageFile = File(capturedImage.path);
+        }
+      }
       
       setState(() {
         _isCapturing = false;
       });
 
-      // Trả về ảnh đã chụp
+      // Trả về ảnh đã chụp qua callback nếu có
       if (widget.onImageCaptured != null) {
-        widget.onImageCaptured!(File(image.path));
+        widget.onImageCaptured!(imageFile);
       }
-
-      // Tự động quay lại màn hình trước
+      
+      // Tự động quay lại màn hình trước với file ảnh
       if (mounted) {
-        Navigator.pop(context, File(image.path));
+        Navigator.pop(context, imageFile);
       }
     } catch (e) {
       setState(() {
@@ -121,7 +179,10 @@ class _CameraScreenState extends State<CameraScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi chụp ảnh: ${e.toString()}')),
+          SnackBar(
+            content: Text('Lỗi khi chụp ảnh: ${e.toString()}'),
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     }

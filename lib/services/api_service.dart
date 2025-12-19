@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/user.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
@@ -203,6 +204,43 @@ class ApiService {
         },
       );
       return User.fromJson(response.data);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Upload avatar image to backend
+  /// Returns the avatar URL
+  Future<String> uploadAvatar(int userId, int id, File imageFile) async {
+    try {
+      if (kIsWeb) {
+        throw Exception('Upload file không hỗ trợ trên web. Vui lòng sử dụng mobile app.');
+      }
+      
+      // Get file name from path
+      final fileName = imageFile.path.split('/').last;
+      
+      // Đọc bytes từ file
+      final bytes = await imageFile.readAsBytes();
+      
+      final formData = FormData.fromMap({
+        'userId': userId,
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
+        ),
+      });
+
+      final response = await _dio.post(
+        '/users/$id/avatar',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      // Response format: {"avatarUrl": "uploads/avatars/..."}
+      return response.data['avatarUrl'] as String;
     } catch (e) {
       throw _handleError(e);
     }
@@ -552,13 +590,20 @@ class ApiService {
   /// Returns the Invoice object with extracted data
   Future<Invoice> uploadInvoice(int userId, File imageFile) async {
     try {
+      if (kIsWeb) {
+        throw Exception('Upload file không hỗ trợ trên web. Vui lòng sử dụng mobile app.');
+      }
+      
       // Get file name from path
       final fileName = imageFile.path.split('/').last;
       
+      // Đọc bytes từ file
+      final bytes = await imageFile.readAsBytes();
+      
       final formData = FormData.fromMap({
         'userId': userId,
-        'file': await MultipartFile.fromFile(
-          imageFile.path,
+        'file': MultipartFile.fromBytes(
+          bytes,
           filename: fileName,
         ),
       });

@@ -40,5 +40,22 @@ class ApiConfig {
   
   /// Debug mode - hiển thị log API requests/responses
   static const bool debugMode = true;
+  
+  /// Base URL của server (không có /api)
+  static String get serverBaseUrl => 'http://$serverIp:$serverPort';
+  
+  /// Build full URL cho avatar/image từ relative path
+  /// Ví dụ: "uploads/avatars/avatar_1_abc.jpg" -> "http://192.168.100.194:8081/uploads/avatars/avatar_1_abc.jpg"
+  static String buildImageUrl(String? relativePath) {
+    if (relativePath == null || relativePath.isEmpty) {
+      return '';
+    }
+    // Nếu đã là full URL thì trả về luôn
+    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+      return relativePath;
+    }
+    // Nếu là relative path thì build full URL
+    return '$serverBaseUrl/$relativePath';
+  }
 }
 
