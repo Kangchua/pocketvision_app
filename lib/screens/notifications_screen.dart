@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/auth_provider.dart';
 import '../utils/exception_handler.dart';
 import '../utils/theme_colors.dart';
 
@@ -19,8 +20,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadNotifications() async {
+    final user = context.read<AuthProvider>().user;
+    if (user == null) return;
+    
     try {
-      await context.read<NotificationProvider>().fetchNotifications();
+      await context.read<NotificationProvider>().fetchNotifications(user.id);
       final error = context.read<NotificationProvider>().error;
       if (error != null && mounted) {
         ExceptionHandler.showErrorSnackBar(context, error);
@@ -71,8 +75,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
 
     if (confirm == true) {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) return;
+      
       try {
-        await provider.markAllAsRead();
+        await provider.markAllAsRead(user.id);
         if (mounted) {
           ExceptionHandler.showSuccessSnackBar(context, 'Đã đánh dấu tất cả đã đọc');
         }

@@ -258,6 +258,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
         // Update existing invoice
         await context.read<InvoiceProvider>().updateInvoice(
           id: widget.invoice!.id,
+          userId: user.id,
           categoryId: _selectedCategoryId,
           storeName: _storeNameController.text.trim().isNotEmpty 
               ? _storeNameController.text.trim() 
@@ -330,8 +331,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
     );
 
     if (confirm == true) {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) {
+        if (mounted) {
+          ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+        }
+        return;
+      }
+      
       try {
-        await context.read<InvoiceProvider>().deleteInvoice(widget.invoice!.id);
+        await context.read<InvoiceProvider>().deleteInvoice(widget.invoice!.id, user.id);
         if (mounted) {
           Navigator.pop(context);
           ExceptionHandler.showSuccessSnackBar(context, 'Xóa hóa đơn thành công');

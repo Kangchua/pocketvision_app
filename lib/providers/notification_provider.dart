@@ -12,13 +12,13 @@ class NotificationProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchNotifications() async {
+  Future<void> fetchNotifications(int userId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _notifications = await _apiService.getNotifications();
+      _notifications = await _apiService.getNotifications(userId);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -52,9 +52,9 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> markAllAsRead() async {
+  Future<void> markAllAsRead(int userId) async {
     try {
-      await _apiService.markAllNotificationsAsRead();
+      await _apiService.markAllNotificationsAsRead(userId);
       _notifications = _notifications.map((n) => app_notification.AppNotification(
         id: n.id,
         userId: n.userId,

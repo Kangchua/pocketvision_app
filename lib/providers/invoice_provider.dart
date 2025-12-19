@@ -67,6 +67,7 @@ class InvoiceProvider extends ChangeNotifier {
 
   Future<void> updateInvoice({
     required int id,
+    required int userId,
     int? categoryId,
     String? storeName,
     required DateTime invoiceDate,
@@ -79,6 +80,7 @@ class InvoiceProvider extends ChangeNotifier {
     try {
       final updatedInvoice = await _apiService.updateInvoice(
         id: id,
+        userId: userId,
         categoryId: categoryId,
         storeName: storeName,
         invoiceDate: invoiceDate,
@@ -100,9 +102,9 @@ class InvoiceProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteInvoice(int id) async {
+  Future<void> deleteInvoice(int id, int userId) async {
     try {
-      await _apiService.deleteInvoice(id);
+      await _apiService.deleteInvoice(id, userId);
       _invoices.removeWhere((i) => i.id == id);
       notifyListeners();
     } catch (e) {

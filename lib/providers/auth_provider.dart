@@ -33,7 +33,7 @@ class AuthProvider extends ChangeNotifier {
         confirmPassword: confirmPassword,
       );
       _user = result['user'];
-      await _saveUser(_user!, result['accessToken'], result['refreshToken']);
+      await _saveUser(_user!, result['accessToken'] as String?, result['refreshToken'] as String?);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -59,7 +59,7 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
       _user = result['user'];
-      await _saveUser(_user!, result['accessToken'], result['refreshToken']);
+      await _saveUser(_user!, result['accessToken'] as String?, result['refreshToken'] as String?);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -94,12 +94,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveUser(User user, String accessToken, String refreshToken) async {
+  Future<void> _saveUser(User user, String? accessToken, String? refreshToken) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', jsonEncode(user.toJson()));
-    await prefs.setString('accessToken', accessToken);
-    await prefs.setString('refreshToken', refreshToken);
-    _apiService.setTokens(accessToken, refreshToken);
+    if (accessToken != null) {
+      await prefs.setString('accessToken', accessToken);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await prefs.setString('refreshToken', refreshToken);
+    } else {
+      // Nếu không có refreshToken, tạo một giá trị mặc định hoặc để trống
+      await prefs.setString('refreshToken', '');
+    }
+    _apiService.setTokens(accessToken, refreshToken ?? '');
   }
 
   Future<void> updateProfile({

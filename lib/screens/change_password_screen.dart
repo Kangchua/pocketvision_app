@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
+import '../utils/theme_colors.dart';
 import '../utils/exception_handler.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -65,11 +65,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: const Text('Đổi mật khẩu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -102,12 +101,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
+                    borderSide: BorderSide(
+                      color: ThemeColors.getPrimary(context),
                       width: 2,
                     ),
                   ),
@@ -143,12 +142,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
+                    borderSide: BorderSide(
+                      color: ThemeColors.getPrimary(context),
                       width: 2,
                     ),
                   ),
@@ -187,12 +186,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
+                    borderSide: BorderSide(
+                      color: ThemeColors.getPrimary(context),
                       width: 2,
                     ),
                   ),
@@ -213,15 +212,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
+                  color: ThemeColors.getSurfaceLight(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: AppColors.primary,
+                      color: ThemeColors.getPrimary(context),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -229,7 +228,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         'Mật khẩu phải có ít nhất 6 ký tự và nên bao gồm chữ cái và số',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: ThemeColors.getTextSecondary(context),
                         ),
                       ),
                     ),
@@ -242,8 +241,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _changePassword,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  backgroundColor: ThemeColors.getPrimary(context),
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

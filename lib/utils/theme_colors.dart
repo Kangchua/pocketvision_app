@@ -93,6 +93,69 @@ class ThemeColors {
     // Info color giữ nguyên cho cả light và dark
     return AppColors.info;
   }
+
+  static Color getSecondary(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.secondary
+        : AppColors.secondary;
+  }
+
+  static Color getSecondaryForeground(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.secondaryForeground
+        : AppColors.secondaryForeground;
+  }
+
+  static Color getAccent(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.accent
+        : AppColors.accent;
+  }
+
+  static Color getAccentForeground(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.accentForeground
+        : AppColors.accentForeground;
+  }
+
+  static Color getPrimaryGlow(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.primaryGlow
+        : AppColors.primaryGlow;
+  }
+
+  // Gradient helpers
+  static LinearGradient getPrimaryGradient(BuildContext context) {
+    return AppColors.primaryGradient;
+  }
+
+  static LinearGradient getSecondaryGradient(BuildContext context) {
+    return AppColors.secondaryGradient;
+  }
+
+  static LinearGradient getAccentGradient(BuildContext context) {
+    return AppColors.accentGradient;
+  }
+
+  // Shadow helpers
+  static List<BoxShadow> getElegantShadow(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.elegantShadow
+        : AppColors.elegantShadow;
+  }
+
+  static List<BoxShadow> getGlowShadow(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? AppColorsDark.glowShadow
+        : AppColors.glowShadow;
+  }
 }
 
 

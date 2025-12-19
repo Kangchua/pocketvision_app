@@ -63,6 +63,7 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> updateExpense({
     required int id,
+    required int userId,
     required int categoryId,
     String? storeName,
     required double totalAmount,
@@ -73,6 +74,7 @@ class ExpenseProvider extends ChangeNotifier {
     try {
       final updatedExpense = await _apiService.updateExpense(
         id: id,
+        userId: userId,
         categoryId: categoryId,
         storeName: storeName,
         totalAmount: totalAmount,

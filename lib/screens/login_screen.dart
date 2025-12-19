@@ -70,27 +70,43 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 40),
-              Icon(
-                Icons.account_balance_wallet_rounded,
-                size: 64,
-                color: ThemeColors.getPrimary(context),
+              SizedBox(height: 60),
+              // Logo với gradient như web
+              Center(
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: ThemeColors.getPrimaryGradient(context),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: ThemeColors.getGlowShadow(context),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 24),
               Text(
-                'PocketVision',
+                'Pocket Money',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: ThemeColors.getPrimary(context),
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
                 ),
               ),
+              SizedBox(height: 8),
               Text(
                 'Quản lý tài chính của bạn',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ThemeColors.getTextSecondary(context),
+                ),
               ),
-              SizedBox(height: 40),
+              SizedBox(height: 48),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -121,44 +137,56 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 obscureText: _obscurePassword,
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 32),
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
-                  return ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : _login,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: ThemeColors.getPrimaryGradient(context),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: ThemeColors.getElegantShadow(context),
                     ),
-                    child: authProvider.isLoading
-                        ? SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                              strokeWidth: 2,
+                    child: ElevatedButton(
+                      onPressed: authProvider.isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: authProvider.isLoading
+                          ? SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Đăng nhập',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
                             ),
-                          )
-                        : Text(
-                            'Đăng nhập',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    ),
                   );
                 },
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Chưa có tài khoản? ',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ThemeColors.getTextSecondary(context),
+                    ),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -173,11 +201,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         color: ThemeColors.getPrimary(context),
                         fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: ThemeColors.getPrimary(context),
                       ),
                     ),
                   ),
                 ],
               ),
+              SizedBox(height: 40),
             ],
           ),
         ),

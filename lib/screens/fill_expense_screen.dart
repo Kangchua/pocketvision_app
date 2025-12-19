@@ -34,7 +34,10 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
   Future<void> _loadCategories() async {
     final user = context.read<AuthProvider>().user;
     if (user != null) {
-      await context.read<CategoryProvider>().fetchCategories();
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        await context.read<CategoryProvider>().fetchCategories(user.id);
+      }
     }
   }
 
@@ -464,7 +467,7 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: ThemeColors.getBorder(context)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -472,9 +475,12 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                           children: [
                             Text(
                               FormatUtils.formatDate(_selectedDate, context),
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: ThemeColors.getTextPrimary(context),
+                              ),
                             ),
-                            Icon(Icons.calendar_today, color: AppColors.primary),
+                            Icon(Icons.calendar_today, color: ThemeColors.getPrimary(context)),
                           ],
                         ),
                       ),
@@ -553,15 +559,15 @@ class _FillExpenseScreenState extends State<FillExpenseScreen> {
                     SizedBox(height: 12),
                     LinearProgressIndicator(
                       value: _calculateCompletionPercentage(),
-                      backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      backgroundColor: ThemeColors.getBorder(context),
+                      valueColor: AlwaysStoppedAnimation<Color>(ThemeColors.getPrimary(context)),
                     ),
                     SizedBox(height: 8),
                     Text(
                       '${(_calculateCompletionPercentage() * 100).round()}% hoàn thành',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: ThemeColors.getTextSecondary(context),
                       ),
                     ),
                   ],

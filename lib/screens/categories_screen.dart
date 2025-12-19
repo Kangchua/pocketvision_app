@@ -48,8 +48,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> _loadCategories() async {
+    final user = context.read<AuthProvider>().user;
+    if (user == null) return;
+    
     try {
-      await context.read<CategoryProvider>().fetchCategories();
+      await context.read<CategoryProvider>().fetchCategories(user.id);
       final error = context.read<CategoryProvider>().error;
       if (error != null && mounted) {
         ExceptionHandler.showErrorSnackBar(context, error);
@@ -152,6 +155,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     try {
       await context.read<CategoryProvider>().addCategory(
+        userId: user.id,
         name: _nameController.text.trim(),
         icon: _iconController.text.trim().isEmpty ? 'category' : _iconController.text.trim(),
       );

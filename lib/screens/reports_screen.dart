@@ -34,7 +34,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         context.read<ExpenseProvider>().fetchExpenses(user.id),
         context.read<BudgetProvider>().fetchBudgets(user.id),
         context.read<InvoiceProvider>().fetchInvoices(user.id),
-        context.read<CategoryProvider>().fetchCategories(),
+        context.read<CategoryProvider>().fetchCategories(user.id),
       ]);
     } catch (e) {
       if (mounted) {

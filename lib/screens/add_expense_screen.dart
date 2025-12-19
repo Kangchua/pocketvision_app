@@ -4,7 +4,6 @@ import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../utils/exception_handler.dart';
 import '../utils/theme_colors.dart';
@@ -82,6 +81,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (widget.expense != null) {
         await context.read<ExpenseProvider>().updateExpense(
           id: widget.expense!.id,
+          userId: widget.expense!.userId,
           categoryId: _selectedCategoryId!,
           storeName: _storeNameController.text.trim().isEmpty 
               ? null 
@@ -140,7 +140,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Xóa', style: TextStyle(color: AppColors.danger)),
+            child: Text('Xóa', style: TextStyle(color: ThemeColors.getDanger(context))),
           ),
         ],
       ),
@@ -253,18 +253,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
+                  color: ThemeColors.getSurfaceLight(context),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeColors.getBorder(context)),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today, color: AppColors.textTertiary),
+                    Icon(Icons.calendar_today, color: ThemeColors.getTextTertiary(context)),
                     SizedBox(width: 12),
                     Text(
                       FormatUtils.formatDate(_selectedDate, context),
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: ThemeColors.getTextPrimary(context),
+                      ),
                     ),
                   ],
                 ),
@@ -301,7 +303,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ElevatedButton(
               onPressed: _isLoading ? null : _saveExpense,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: ThemeColors.getPrimary(context),
+                foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white 
+                    : Colors.black,
                 padding: EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -312,14 +317,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                  valueColor: AlwaysStoppedAnimation(
+                    Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black,
+                  ),
                   strokeWidth: 2,
                 ),
               )
                   : Text(
                 widget.expense != null ? 'Cập nhật' : 'Thêm chi tiêu',
                 style: TextStyle(
-                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

@@ -5,7 +5,6 @@ import '../providers/expense_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/notification_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../utils/theme_colors.dart';
 import 'expenses_screen.dart';
@@ -57,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // Load dữ liệu song song để tối ưu tốc độ
         await Future.wait([
           context.read<ExpenseProvider>().fetchExpenses(user.id),
-          context.read<CategoryProvider>().fetchCategories(),
+          context.read<CategoryProvider>().fetchCategories(user.id),
           context.read<BudgetProvider>().fetchBudgets(user.id),
         ]);
         
@@ -66,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
         
         // Bỏ qua lỗi notification nếu có
         try {
-          await context.read<NotificationProvider>().fetchNotifications();
+          await context.read<NotificationProvider>().fetchNotifications(user.id);
         } catch (e) {
           // Ignore notification errors
         }
@@ -84,7 +83,32 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
-        title: Text('PocketVision'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: ThemeColors.getPrimaryGradient(context),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_rounded,
+                size: 24,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text(
+              'Pocket Money',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
         centerTitle: true,
         elevation: 0,
         leading: Builder(
@@ -337,22 +361,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add, size: 20),
-                          label: const Text('Thêm chi tiêu'),
-                          style: ElevatedButton.styleFrom(
-                            elevation: 2,
-                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: ThemeColors.getPrimaryGradient(context),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: ThemeColors.getElegantShadow(context),
                           ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
-                            );
-                          },
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.add, size: 20),
+                            label: const Text('Thêm chi tiêu'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -487,16 +519,13 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: ThemeColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ThemeColors.getBorder(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: ThemeColors.getBorder(context),
+          width: 1,
+        ),
+        boxShadow: ThemeColors.getElegantShadow(context),
       ),
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -512,12 +541,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.all(8),
+                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
             ],
           ),
@@ -555,28 +584,32 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: ThemeColors.getSurface(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ThemeColors.getBorder(context)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          border: Border.all(
+            color: ThemeColors.getBorder(context),
+            width: 1,
+          ),
+          boxShadow: ThemeColors.getElegantShadow(context),
         ),
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: ThemeColors.getPrimary(context).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      colors: [
+                        ThemeColors.getPrimary(context).withOpacity(0.2),
+                        ThemeColors.getPrimaryGlow(context).withOpacity(0.1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: ThemeColors.getPrimary(context), size: 20),
+                  child: Icon(icon, color: ThemeColors.getPrimary(context), size: 22),
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -624,21 +657,21 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: ThemeColors.getSurface(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: ThemeColors.getBorder(context)),
         ),
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.primary, size: 28),
+            Icon(icon, color: ThemeColors.getPrimary(context), size: 28),
             SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textPrimary,
+                color: ThemeColors.getTextPrimary(context),
               ),
             ),
           ],

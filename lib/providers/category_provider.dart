@@ -12,13 +12,13 @@ class CategoryProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchCategories() async {
+  Future<void> fetchCategories(int userId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _categories = await _apiService.getCategories();
+      _categories = await _apiService.getCategories(userId);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -30,12 +30,14 @@ class CategoryProvider extends ChangeNotifier {
   }
 
   Future<void> addCategory({
+    required int userId,
     required String name,
     String? colorHex,
     String? icon,
   }) async {
     try {
       final category = await _apiService.createCategory(
+        userId: userId,
         name: name,
         colorHex: colorHex,
         icon: icon,

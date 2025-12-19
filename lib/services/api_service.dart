@@ -58,8 +58,16 @@ class ApiService {
           print('❌ API Error: ${e.type} - ${e.message}');
           if (e.response != null) {
             print('📊 Status: ${e.response?.statusCode}');
+            print('📄 Data Type: ${e.response?.data?.runtimeType}');
             print('📄 Data: ${e.response?.data}');
+            print('📄 Headers: ${e.response?.headers}');
+          } else {
+            print('⚠️ No response data');
           }
+          if (e.error != null) {
+            print('🔴 Error object: ${e.error}');
+          }
+          print('📍 Stack trace: ${e.stackTrace}');
           return handler.next(e);
         },
       ));
@@ -67,7 +75,7 @@ class ApiService {
       // Chỉ thêm Authorization header khi không debug
       _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
-          if (_accessToken != null) {
+          if (_accessToken != null && _accessToken!.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
           }
           return handler.next(options);
@@ -76,7 +84,7 @@ class ApiService {
     }
   }
 
-  void setTokens(String accessToken, String refreshToken) {
+  void setTokens(String? accessToken, String? refreshToken) {
     _accessToken = accessToken;
     _refreshToken = refreshToken;
   }
@@ -105,11 +113,13 @@ class ApiService {
       );
       final data = response.data;
       if (data['user'] != null) {
-        setTokens(data['accessToken'], data['refreshToken']);
+        final accessToken = data['accessToken'] as String? ?? '';
+        final refreshToken = data['refreshToken'] as String? ?? '';
+        setTokens(accessToken, refreshToken);
         return {
           'user': User.fromJson(data['user']),
-          'accessToken': data['accessToken'],
-          'refreshToken': data['refreshToken'],
+          'accessToken': accessToken,
+          'refreshToken': refreshToken,
         };
       } else {
         throw Exception('Invalid response');
@@ -133,11 +143,13 @@ class ApiService {
       );
       final data = response.data;
       if (data['user'] != null) {
-        setTokens(data['accessToken'], data['refreshToken']);
+        final accessToken = data['accessToken'] as String? ?? '';
+        final refreshToken = data['refreshToken'] as String? ?? '';
+        setTokens(accessToken, refreshToken);
         return {
           'user': User.fromJson(data['user']),
-          'accessToken': data['accessToken'],
-          'refreshToken': data['refreshToken'],
+          'accessToken': accessToken,
+          'refreshToken': refreshToken,
         };
       } else {
         throw Exception('Invalid response');
@@ -256,7 +268,7 @@ class ApiService {
           'totalAmount': totalAmount,
           'paymentMethod': paymentMethod,
           'note': note,
-          'expenseDate': expenseDate.toIso8601String(),
+          'expenseDate': expenseDate.toIso8601String().split('T')[0],
         },
       );
       return Expense.fromJson(response.data);
@@ -267,6 +279,7 @@ class ApiService {
 
   Future<Expense> updateExpense({
     required int id,
+    required int userId,
     required int categoryId,
     String? storeName,
     required double totalAmount,
@@ -278,12 +291,13 @@ class ApiService {
       final response = await _dio.put(
         '/expenses/$id',
         data: {
+          'userId': userId,
           'categoryId': categoryId,
           'storeName': storeName,
           'totalAmount': totalAmount,
           'paymentMethod': paymentMethod,
           'note': note,
-          'expenseDate': expenseDate.toIso8601String(),
+          'expenseDate': expenseDate.toIso8601String().split('T')[0],
         },
       );
       return Expense.fromJson(response.data);
@@ -294,16 +308,40 @@ class ApiService {
 
   Future<void> deleteExpense(int id) async {
     try {
-      await _dio.delete('/expenses/$id');
+      // Backend trả về plain text "Đã xóa chi tiêu thành công" không phải JSON
+      // Nên cần set responseType để chấp nhận plain text
+      final response = await _dio.delete(
+        '/expenses/$id',
+        options: Options(
+          responseType: ResponseType.plain, // Chấp nhận plain text thay vì JSON
+        ),
+      );
+      if (ApiConfig.debugMode) {
+        print('✅ Delete expense $id: ${response.statusCode}');
+        print('📄 Response: ${response.data}');
+      }
     } catch (e) {
+      // Nếu lỗi là FormatException do cố parse plain text như JSON
+      // và status code là 200, thì coi như thành công
+      if (e is DioException && 
+          e.error is FormatException &&
+          e.response?.statusCode == 200) {
+        if (ApiConfig.debugMode) {
+          print('✅ Delete expense $id: Success (plain text response)');
+        }
+        return; // Thành công, không throw error
+      }
       throw _handleError(e);
     }
   }
 
   // Category Endpoints
-  Future<List<Category>> getCategories() async {
+  Future<List<Category>> getCategories(int userId) async {
     try {
-      final response = await _dio.get('/categories');
+      final response = await _dio.get(
+        '/categories',
+        queryParameters: {'userId': userId},
+      );
       final List<dynamic> data = response.data;
       return data.map((json) => Category.fromJson(json)).toList();
     } catch (e) {
@@ -312,6 +350,7 @@ class ApiService {
   }
 
   Future<Category> createCategory({
+    required int userId,
     required String name,
     String? colorHex,
     String? icon,
@@ -320,9 +359,10 @@ class ApiService {
       final response = await _dio.post(
         '/categories',
         data: {
+          'userId': userId,
           'name': name,
           'colorHex': colorHex,
-          'icon': icon,
+          'icon': icon ?? '🏷️',
         },
       );
       return Category.fromJson(response.data);
@@ -414,6 +454,9 @@ class ApiService {
     }
   }
 
+  // LƯU Ý: Backend hiện tại không có endpoint POST /invoices để tạo invoice thủ công
+  // Chỉ có POST /invoices/upload để upload và phân tích ảnh
+  // Method này có thể không hoạt động nếu backend chưa implement endpoint này
   Future<Invoice> createInvoice({
     required int userId,
     int? categoryId,
@@ -448,6 +491,7 @@ class ApiService {
 
   Future<Invoice> updateInvoice({
     required int id,
+    required int userId,
     int? categoryId,
     String? storeName,
     required DateTime invoiceDate,
@@ -460,6 +504,7 @@ class ApiService {
     try {
       final response = await _dio.put(
         '/invoices/$id',
+        queryParameters: {'userId': userId},
         data: {
           'categoryId': categoryId,
           'storeName': storeName,
@@ -477,9 +522,25 @@ class ApiService {
     }
   }
 
-  Future<void> deleteInvoice(int id) async {
+  Future<void> deleteInvoice(int id, int userId) async {
     try {
-      await _dio.delete('/invoices/$id');
+      await _dio.delete(
+        '/invoices/$id',
+        queryParameters: {'userId': userId},
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Convert invoice to expense
+  Future<Expense> convertInvoiceToExpense(int invoiceId, int userId) async {
+    try {
+      final response = await _dio.post(
+        '/invoices/$invoiceId/convert',
+        queryParameters: {'userId': userId},
+      );
+      return Expense.fromJson(response.data);
     } catch (e) {
       throw _handleError(e);
     }
@@ -528,7 +589,7 @@ class ApiService {
     try {
       final formData = FormData.fromMap({
         'userId': userId,
-        'image': await MultipartFile.fromFile(imagePath, filename: 'invoice.jpg'),
+        'file': await MultipartFile.fromFile(imagePath, filename: 'invoice.jpg'),
       });
 
       final response = await _dio.post(
@@ -544,6 +605,8 @@ class ApiService {
   }
 
   // Income Endpoints
+  // LƯU Ý: Backend hiện tại không có IncomeController
+  // Các method này sẽ không hoạt động cho đến khi backend implement IncomeController
   Future<List<Income>> getIncomes() async {
     try {
       final response = await _dio.get('/incomes');
@@ -598,9 +661,12 @@ class ApiService {
   }
 
   // Notification Endpoints
-  Future<List<app_notification.AppNotification>> getNotifications() async {
+  Future<List<app_notification.AppNotification>> getNotifications(int userId) async {
     try {
-      final response = await _dio.get('/notifications');
+      final response = await _dio.get(
+        '/notifications',
+        queryParameters: {'userId': userId},
+      );
       return (response.data as List).map((json) => app_notification.AppNotification.fromJson(json)).toList();
     } catch (e) {
       throw _handleError(e);
@@ -609,15 +675,30 @@ class ApiService {
 
   Future<void> markNotificationAsRead(int id) async {
     try {
-      await _dio.patch('/notifications/$id/read');
+      await _dio.put('/notifications/$id/read');
     } catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<void> markAllNotificationsAsRead() async {
+  Future<void> markAllNotificationsAsRead(int userId) async {
     try {
-      await _dio.patch('/notifications/read-all');
+      await _dio.put(
+        '/notifications/read-all',
+        queryParameters: {'userId': userId},
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<int> getUnreadNotificationCount(int userId) async {
+    try {
+      final response = await _dio.get(
+        '/notifications/unread-count',
+        queryParameters: {'userId': userId},
+      );
+      return response.data as int;
     } catch (e) {
       throw _handleError(e);
     }
@@ -633,6 +714,14 @@ class ApiService {
 
   String _handleError(dynamic error) {
     if (error is DioException) {
+      // Log chi tiết để debug
+      if (ApiConfig.debugMode && error.response != null) {
+        print('🔴 Error Status: ${error.response?.statusCode}');
+        print('🔴 Error Data Type: ${error.response?.data.runtimeType}');
+        print('🔴 Error Data: ${error.response?.data}');
+      }
+
+      // Xử lý các status code cụ thể
       if (error.response?.statusCode == 401) {
         return 'Không được phép. Vui lòng đăng nhập lại.';
       }
@@ -645,15 +734,38 @@ class ApiService {
       if (error.response?.statusCode == 500) {
         return 'Lỗi server. Vui lòng thử lại sau.';
       }
-      if (error.response?.data is Map) {
-        final message = error.response?.data['message'];
-        if (message != null) {
-          return message.toString();
+
+      // Xử lý response data - ưu tiên lấy message từ response
+      if (error.response?.data != null) {
+        // Nếu là Map (JSON object)
+        if (error.response!.data is Map) {
+          final data = error.response!.data as Map;
+          if (data.containsKey('message')) {
+            return data['message'].toString();
+          }
+          // Nếu có key 'error'
+          if (data.containsKey('error')) {
+            return data['error'].toString();
+          }
+        }
+        
+        // Nếu là String (plain text)
+        if (error.response!.data is String) {
+          return error.response!.data as String;
+        }
+        
+        // Nếu là dynamic type, thử convert sang String
+        try {
+          final dataStr = error.response!.data.toString();
+          if (dataStr.isNotEmpty && dataStr != 'null') {
+            return dataStr;
+          }
+        } catch (e) {
+          // Ignore conversion error
         }
       }
-      if (error.response?.data is String) {
-        return error.response!.data as String;
-      }
+
+      // Xử lý các loại lỗi kết nối
       if (error.type == DioExceptionType.connectionTimeout || 
           error.type == DioExceptionType.receiveTimeout) {
         return 'Kết nối timeout. Vui lòng thử lại.';
@@ -661,7 +773,58 @@ class ApiService {
       if (error.type == DioExceptionType.connectionError) {
         return 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       }
-      return error.message ?? 'Lỗi kết nối';
+      
+      // Xử lý DioExceptionType.unknown - thường xảy ra khi response không parse được
+      if (error.type == DioExceptionType.unknown) {
+        if (error.response != null) {
+          // Có response nhưng không parse được - có thể là plain text
+          if (error.response!.data != null) {
+            if (error.response!.data is String) {
+              return error.response!.data as String;
+            }
+            try {
+              final dataStr = error.response!.data.toString();
+              if (dataStr.isNotEmpty && dataStr != 'null') {
+                return dataStr;
+              }
+            } catch (e) {
+              // Ignore
+            }
+          }
+          // Nếu có status code, trả về message tương ứng
+          if (error.response!.statusCode == 400) {
+            return 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+          }
+          if (error.response!.statusCode == 404) {
+            return 'Không tìm thấy dữ liệu.';
+          }
+          if (error.response!.statusCode == 500) {
+            return 'Lỗi server. Vui lòng thử lại sau.';
+          }
+        }
+        // Nếu không có response, có thể là lỗi network hoặc parse
+        return error.message ?? 'Lỗi không xác định. Vui lòng thử lại.';
+      }
+      
+      // Xử lý 400 Bad Request - có thể có message trong response
+      if (error.response?.statusCode == 400) {
+        if (error.response?.data != null) {
+          if (error.response!.data is String) {
+            return error.response!.data as String;
+          }
+          if (error.response!.data is Map) {
+            final data = error.response!.data as Map;
+            return data['message']?.toString() ?? 
+                   data['error']?.toString() ?? 
+                   'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+          }
+          return error.response!.data.toString();
+        }
+        return 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+      }
+
+      // Fallback: trả về message từ DioException hoặc message mặc định
+      return error.message ?? 'Lỗi kết nối. Vui lòng thử lại.';
     }
     return error.toString();
   }

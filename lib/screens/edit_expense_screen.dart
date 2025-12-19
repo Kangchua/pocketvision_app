@@ -4,8 +4,9 @@ import '../providers/expense_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/expense.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
+import '../utils/theme_colors.dart';
+import '../utils/exception_handler.dart';
 
 class EditExpenseScreen extends StatefulWidget {
   final Expense expense;
@@ -64,28 +65,36 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     final user = context.read<AuthProvider>().user;
     if (user == null) return;
 
+    if (_selectedCategoryId == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng chọn danh mục');
+      return;
+    }
+
+    if (_selectedPaymentMethod == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Vui lòng chọn phương thức thanh toán');
+      return;
+    }
 
     try {
       await context.read<ExpenseProvider>().updateExpense(
         id: widget.expense.id,
-        categoryId: _selectedCategoryId ?? 0,
-        storeName: _storeNameController.text,
+        userId: widget.expense.userId,
+        categoryId: _selectedCategoryId!,
+        storeName: _storeNameController.text.trim().isEmpty 
+            ? null 
+            : _storeNameController.text.trim(),
         totalAmount: double.parse(_amountController.text),
         paymentMethod: _selectedPaymentMethod!,
         note: _noteController.text.trim().isEmpty ? '' : _noteController.text.trim(),
         expenseDate: _selectedDate,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cập nhật chi tiêu thành công')),
-        );
+        ExceptionHandler.showSuccessSnackBar(context, 'Cập nhật chi tiêu thành công');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${e.toString()}')),
-        );
+        ExceptionHandler.showErrorSnackBar(context, e);
       }
     }
   }
@@ -93,18 +102,17 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
         title: Text('Chỉnh sửa chi tiêu'),
         elevation: 0,
-        backgroundColor: AppColors.surface,
         actions: [
           TextButton(
             onPressed: _saveExpense,
             child: Text(
               'Lưu',
               style: TextStyle(
-                color: AppColors.primary,
+                color: ThemeColors.getPrimary(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -123,9 +131,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Amount Input
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -136,24 +144,29 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
                         TextFormField(
                           controller: _amountController,
                           keyboardType: TextInputType.numberWithOptions(decimal: true),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 18, 
+                            fontWeight: FontWeight.w600,
+                            color: ThemeColors.getTextPrimary(context),
+                          ),
                           decoration: InputDecoration(
                             hintText: '0',
                             suffixText: 'VND',
+                            hintStyle: TextStyle(color: ThemeColors.getTextTertiary(context)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                           validator: (value) {
@@ -175,9 +188,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Category Selection
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -188,26 +201,31 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<int>(
                           initialValue: _selectedCategoryId,
+                          dropdownColor: ThemeColors.getSurface(context),
+                          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                           items: categoryProvider.categories.map((category) {
                             return DropdownMenuItem<int>(
                               value: category.id,
-                              child: Text(category.name),
+                              child: Text(
+                                category.name,
+                                style: TextStyle(color: ThemeColors.getTextPrimary(context)),
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -230,9 +248,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Store Name
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -243,21 +261,23 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
                         TextFormField(
                           controller: _storeNameController,
+                          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
                           decoration: InputDecoration(
                             hintText: 'Nhập tên cửa hàng',
+                            hintStyle: TextStyle(color: ThemeColors.getTextTertiary(context)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                         ),
@@ -269,9 +289,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Payment Method
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -282,28 +302,45 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedPaymentMethod,
+                          dropdownColor: ThemeColors.getSurface(context),
+                          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                           items: [
-                            DropdownMenuItem(value: 'CASH', child: Text('Tiền mặt')),
-                            DropdownMenuItem(value: 'CREDIT_CARD', child: Text('Thẻ tín dụng')),
-                            DropdownMenuItem(value: 'BANK_TRANSFER', child: Text('Chuyển khoản')),
-                            DropdownMenuItem(value: 'E_WALLET', child: Text('Ví điện tử')),
-                            DropdownMenuItem(value: 'OTHER', child: Text('Khác')),
+                            DropdownMenuItem(
+                              value: 'CASH', 
+                              child: Text('Tiền mặt', style: TextStyle(color: ThemeColors.getTextPrimary(context))),
+                            ),
+                            DropdownMenuItem(
+                              value: 'CREDIT_CARD', 
+                              child: Text('Thẻ tín dụng', style: TextStyle(color: ThemeColors.getTextPrimary(context))),
+                            ),
+                            DropdownMenuItem(
+                              value: 'BANK_TRANSFER', 
+                              child: Text('Chuyển khoản', style: TextStyle(color: ThemeColors.getTextPrimary(context))),
+                            ),
+                            DropdownMenuItem(
+                              value: 'E_WALLET', 
+                              child: Text('Ví điện tử', style: TextStyle(color: ThemeColors.getTextPrimary(context))),
+                            ),
+                            DropdownMenuItem(
+                              value: 'OTHER', 
+                              child: Text('Khác', style: TextStyle(color: ThemeColors.getTextPrimary(context))),
+                            ),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -325,9 +362,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Date Selection
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -338,7 +375,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -347,7 +384,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           child: Container(
                             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                             decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: ThemeColors.getBorder(context)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -355,9 +392,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                               children: [
                                 Text(
                                   FormatUtils.formatDate(_selectedDate, context),
-                                  style: TextStyle(fontSize: 16),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: ThemeColors.getTextPrimary(context),
+                                  ),
                                 ),
-                                Icon(Icons.calendar_today, color: AppColors.primary),
+                                Icon(Icons.calendar_today, color: ThemeColors.getPrimary(context)),
                               ],
                             ),
                           ),
@@ -370,9 +410,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   // Note
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: ThemeColors.getSurface(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: ThemeColors.getBorder(context)),
                     ),
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -383,22 +423,24 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: ThemeColors.getTextPrimary(context),
                           ),
                         ),
                         SizedBox(height: 8),
                         TextFormField(
                           controller: _noteController,
                           maxLines: 3,
+                          style: TextStyle(color: ThemeColors.getTextPrimary(context)),
                           decoration: InputDecoration(
                             hintText: 'Nhập ghi chú (tùy chọn)',
+                            hintStyle: TextStyle(color: ThemeColors.getTextTertiary(context)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: ThemeColors.getBorder(context)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
                             ),
                           ),
                         ),
@@ -411,14 +453,16 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   ElevatedButton(
                     onPressed: _saveExpense,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: ThemeColors.getPrimary(context),
+                      foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.white 
+                          : Colors.black,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 4,
-                      shadowColor: AppColors.primary.withOpacity(0.3),
+                      shadowColor: ThemeColors.getPrimary(context).withOpacity(0.3),
                     ),
                     child: Text(
                       'Cập nhật chi tiêu',

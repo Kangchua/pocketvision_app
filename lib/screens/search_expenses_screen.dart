@@ -36,7 +36,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
     final user = context.read<AuthProvider>().user;
     if (user != null) {
       await context.read<ExpenseProvider>().fetchExpenses(user.id);
-      await context.read<CategoryProvider>().fetchCategories();
+      await context.read<CategoryProvider>().fetchCategories(user.id);
       _allExpenses = context.read<ExpenseProvider>().expenses;
       _filterExpenses();
     }
@@ -269,7 +269,7 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppColors.textSecondary,
+            color: ThemeColors.getTextSecondary(context),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -278,20 +278,28 @@ class _SearchExpensesScreenState extends State<SearchExpensesScreen> {
           height: 40,
           child: DropdownButtonFormField<String>(
             initialValue: value,
+            dropdownColor: ThemeColors.getSurface(context),
+            style: TextStyle(color: ThemeColors.getTextPrimary(context)),
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: ThemeColors.getBorder(context)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
+                borderSide: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
               ),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             items: items.map((item) => DropdownMenuItem(
               value: item,
-              child: Text(item, style: TextStyle(fontSize: 14)),
+              child: Text(
+                item, 
+                style: TextStyle(
+                  fontSize: 14,
+                  color: ThemeColors.getTextPrimary(context),
+                ),
+              ),
             )).toList(),
             onChanged: onChanged,
           ),
