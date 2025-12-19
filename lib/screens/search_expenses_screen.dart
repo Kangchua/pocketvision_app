@@ -5,7 +5,6 @@ import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../utils/theme_colors.dart';
 

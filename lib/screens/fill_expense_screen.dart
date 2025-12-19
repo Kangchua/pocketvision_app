@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
 import '../utils/theme_colors.dart';
 

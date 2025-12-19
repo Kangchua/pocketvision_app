@@ -7,6 +7,7 @@ import '../providers/budget_provider.dart';
 import '../providers/notification_provider.dart';
 import '../utils/format_utils.dart';
 import '../utils/theme_colors.dart';
+import '../config/api_config.dart';
 import 'expenses_screen.dart';
 import 'budgets_screen.dart';
 import 'invoices_screen.dart';
@@ -174,33 +175,51 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: ThemeColors.getPrimary(context),
-                      child: Icon(
-                        Icons.person,
-                        size: 30,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        final user = authProvider.user;
-                        return Text(
+                child: Consumer<AuthProvider>(
+                  builder: (context, authProvider, _) {
+                    final user = authProvider.user;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 35,
+                          backgroundColor: ThemeColors.getPrimary(context),
+                          backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
+                              ? NetworkImage(ApiConfig.buildImageUrl(user.avatarUrl))
+                              : null,
+                          child: user?.avatarUrl == null || user!.avatarUrl!.isEmpty
+                              ? Icon(
+                                  Icons.person,
+                                  size: 35,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
                           user?.fullName ?? 'Người dùng',
                           style: TextStyle(
                             color: ThemeColors.getTextPrimary(context),
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                        if (user?.email != null) ...[
+                          SizedBox(height: 4),
+                          Text(
+                            user!.email,
+                            style: TextStyle(
+                              color: ThemeColors.getTextSecondary(context),
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ),
               ListTile(
