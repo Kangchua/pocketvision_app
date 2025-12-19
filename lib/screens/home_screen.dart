@@ -31,56 +31,97 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  bool _hasLoadedData = false;
 
   @override
   void initState() {
     super.initState();
     // Sử dụng addPostFrameCallback để tránh setState trong build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      _loadDataIfNeeded();
     });
   }
 
-  void _loadData() async {
-    if (!mounted) return;
-    
-    // Đợi một chút để đảm bảo context đã sẵn sàng
-    await Future.delayed(Duration(milliseconds: 100));
-    
+  void _loadDataIfNeeded() async {
     if (!mounted) return;
     
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.user;
 
-    if (user != null) {
+    if (user != null && !_hasLoadedData) {
+      await _loadData(user.id);
+      if (mounted) {
+        setState(() {
+          _hasLoadedData = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadData(int userId) async {
+    if (!mounted) return;
+    
+    try {
+      // Load dữ liệu song song để tối ưu tốc độ
+      await Future.wait([
+        context.read<ExpenseProvider>().fetchExpenses(userId),
+        context.read<CategoryProvider>().fetchCategories(userId),
+        context.read<BudgetProvider>().fetchBudgets(userId),
+      ]);
+      
+      // Load invoices và notifications riêng để không block UI
+      // InvoiceProvider sẽ được load trong InvoicesScreen
+      
+      // Bỏ qua lỗi notification nếu có
       try {
-        // Load dữ liệu song song để tối ưu tốc độ
-        await Future.wait([
-          context.read<ExpenseProvider>().fetchExpenses(user.id),
-          context.read<CategoryProvider>().fetchCategories(user.id),
-          context.read<BudgetProvider>().fetchBudgets(user.id),
-        ]);
-        
-        // Load invoices và notifications riêng để không block UI
-        // InvoiceProvider sẽ được load trong InvoicesScreen
-        
-        // Bỏ qua lỗi notification nếu có
-        try {
-          await context.read<NotificationProvider>().fetchNotifications(user.id);
-        } catch (e) {
-          // Ignore notification errors
+        if (mounted) {
+          await context.read<NotificationProvider>().fetchNotifications(userId);
         }
       } catch (e) {
-        // Handle errors silently - có thể log ra console trong development
-        if (mounted) {
-          debugPrint('Error loading data: $e');
-        }
+        // Ignore notification errors
+      }
+    } catch (e) {
+      // Handle errors silently - có thể log ra console trong development
+      if (mounted) {
+        debugPrint('Error loading data: $e');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen to AuthProvider changes và load data khi user thay đổi
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final user = authProvider.user;
+        
+        // Load data khi user được set và chưa load
+        if (user != null && !_hasLoadedData) {
+          // Sử dụng addPostFrameCallback để tránh setState trong build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && user.id == authProvider.user?.id) {
+              _loadDataIfNeeded();
+            }
+          });
+        }
+        
+        // Reset flag nếu user thay đổi (ví dụ: logout rồi login lại)
+        if (user == null && _hasLoadedData) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _hasLoadedData = false;
+              });
+            }
+          });
+        }
+        
+        return _buildScaffold(context);
+      },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: ThemeColors.getBackground(context),
       appBar: AppBar(
@@ -409,7 +450,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       IconButton(
                         icon: Icon(Icons.refresh, color: ThemeColors.getPrimary(context)),
-                        onPressed: _loadData,
+                        onPressed: () {
+                          final user = context.read<AuthProvider>().user;
+                          if (user != null) {
+                            _hasLoadedData = false;
+                            _loadData(user.id);
+                          }
+                        },
                         style: IconButton.styleFrom(
                           backgroundColor: ThemeColors.getSurfaceLight(context),
                           padding: const EdgeInsets.all(12),

@@ -12,6 +12,7 @@ import 'providers/notification_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/currency_provider.dart';
 import 'providers/language_provider.dart';
+import 'widgets/auth_wrapper.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
@@ -41,11 +42,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => IncomeProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
-      child: Consumer3<ThemeProvider, LanguageProvider, AuthProvider>(
-        builder: (context, themeProvider, languageProvider, authProvider, _) {
-          // Load user on app start
-          authProvider.loadUser();
-
+      child: Consumer2<ThemeProvider, LanguageProvider>(
+        builder: (context, themeProvider, languageProvider, _) {
           return MaterialApp(
             title: 'PocketVision',
             theme: AppTheme.lightTheme(),
@@ -59,7 +57,7 @@ class MyApp extends StatelessWidget {
               '/landing': (context) => LandingScreen(),
               '/api-test': (context) => ApiTestScreen(),
             },
-            home: authProvider.user != null ? HomeScreen() : LoginScreen(),
+            home: const AuthWrapper(),
           );
         },
       ),
