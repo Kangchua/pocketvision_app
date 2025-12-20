@@ -152,6 +152,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         setState(() {
           _isUploadingImage = false;
+          _selectedImage = null; // Clear selected image để hiển thị ảnh từ server
         });
         ExceptionHandler.showSuccessSnackBar(context, 'Đã cập nhật ảnh đại diện thành công');
       }
