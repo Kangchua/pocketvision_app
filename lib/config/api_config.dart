@@ -16,11 +16,11 @@ class ApiConfig {
   /// - 192.168.x.x: Dùng cho device thật (iPhone/Android)
   /// 
   /// Có thể thay đổi giữa các IP:
-  /// - '192.168.100.194' (IP hiện tại)
-  /// - '192.168.2.8' (IP dự phòng - nếu máy khác host)
+  /// - '192.168.2.8' (IP hiện tại)
+  /// - '192.168.100.194' (IP dự phòng - nếu máy khác host)
   /// 
   /// Ví dụ: '192.168.1.100' hoặc '192.168.0.5'
-  static const String serverIp = '192.168.100.194';
+  static const String serverIp = '192.168.2.8';
   
   /// Port của backend server (theo application.properties)
   static const int serverPort = 8081;
@@ -45,7 +45,7 @@ class ApiConfig {
   static String get serverBaseUrl => 'http://$serverIp:$serverPort';
   
   /// Build full URL cho avatar/image từ relative path
-  /// Ví dụ: "uploads/avatars/avatar_1_abc.jpg" -> "http://192.168.100.194:8081/uploads/avatars/avatar_1_abc.jpg"
+  /// Ví dụ: "uploads/avatars/avatar_1_abc.jpg" -> "http://192.168.2.8:8081/uploads/avatars/avatar_1_abc.jpg"
   static String buildImageUrl(String? relativePath) {
     if (relativePath == null || relativePath.isEmpty) {
       return '';
