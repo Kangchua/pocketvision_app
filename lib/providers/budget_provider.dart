@@ -102,4 +102,24 @@ class BudgetProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// Tính lại tất cả ngân sách (recalculate spentAmount)
+  /// Dùng khi có nghi ngờ dữ liệu không đồng bộ
+  Future<void> recalculateBudgets(int userId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _budgets = await _apiService.recalculateBudgets(userId);
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

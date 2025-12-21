@@ -115,4 +115,78 @@ class ExpenseProvider extends ChangeNotifier {
         e.expenseDate.year == month.year &&
         e.expenseDate.month == month.month).toList();
   }
+
+  /// Lấy chi tiêu theo tuần (từ thứ 2 đến chủ nhật)
+  List<Expense> getExpensesByWeek(DateTime date) {
+    // Tính ngày đầu tuần (Thứ 2)
+    final weekday = date.weekday; // 1 = Monday, 7 = Sunday
+    final startOfWeek = date.subtract(Duration(days: weekday - 1));
+    final endOfWeek = startOfWeek.add(Duration(days: 6));
+    
+    return _expenses.where((e) {
+      return e.expenseDate.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
+             e.expenseDate.isBefore(endOfWeek.add(Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Lấy chi tiêu theo năm
+  List<Expense> getExpensesByYear(int year) {
+    return _expenses.where((e) => e.expenseDate.year == year).toList();
+  }
+
+  /// Lấy chi tiêu theo khoảng thời gian
+  List<Expense> getExpensesByDateRange(DateTime startDate, DateTime endDate) {
+    return _expenses.where((e) {
+      return e.expenseDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+             e.expenseDate.isBefore(endDate.add(Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Tính tổng chi tiêu theo tuần
+  double getTotalExpensesByWeek(DateTime date) {
+    return getExpensesByWeek(date).fold(0.0, (sum, e) => sum + e.totalAmount);
+  }
+
+  /// Tính tổng chi tiêu theo tháng
+  double getTotalExpensesByMonth(DateTime month) {
+    return getExpensesByMonth(month).fold(0.0, (sum, e) => sum + e.totalAmount);
+  }
+
+  /// Tính tổng chi tiêu theo năm
+  double getTotalExpensesByYear(int year) {
+    return getExpensesByYear(year).fold(0.0, (sum, e) => sum + e.totalAmount);
+  }
+
+  /// Cập nhật chi tiêu từ hóa đơn
+  /// Nếu expense đã tồn tại thì update, nếu chưa thì add mới
+  Future<void> updateExpenseFromInvoice(int invoiceId, int userId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Gọi API để convert invoice to expense
+      final expense = await _apiService.convertInvoiceToExpense(invoiceId, userId);
+      
+      // Kiểm tra xem expense đã tồn tại chưa (dựa vào id)
+      final existingIndex = _expenses.indexWhere((e) => e.id == expense.id);
+      
+      if (existingIndex >= 0) {
+        // Update existing expense
+        _expenses[existingIndex] = expense;
+      } else {
+        // Add new expense
+        _expenses.add(expense);
+      }
+      
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

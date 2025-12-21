@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/expense_provider.dart';
+import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/expense.dart';
@@ -88,6 +89,16 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         note: _noteController.text.trim().isEmpty ? '' : _noteController.text.trim(),
         expenseDate: _selectedDate,
       );
+
+      // Refresh budgets để cập nhật spentAmount
+      if (mounted) {
+        try {
+          await context.read<BudgetProvider>().fetchBudgets(user.id);
+        } catch (e) {
+          // Ignore budget refresh errors
+        }
+      }
+
       if (mounted) {
         ExceptionHandler.showSuccessSnackBar(context, 'Cập nhật chi tiêu thành công');
         Navigator.pop(context);

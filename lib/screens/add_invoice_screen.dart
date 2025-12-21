@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../models/invoice.dart';
 import '../providers/invoice_provider.dart';
+import '../providers/expense_provider.dart';
+import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/format_utils.dart';
@@ -405,6 +407,78 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
     }
   }
 
+  /// Chuyển đổi hóa đơn thành chi tiêu và cập nhật
+  Future<void> _convertToExpense() async {
+    if (widget.invoice == null) return;
+
+    final user = context.read<AuthProvider>().user;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+      return;
+    }
+
+    // Xác nhận
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cập nhật chi tiêu?'),
+        content: Text(
+          'Bạn có muốn cập nhật chi tiêu từ hóa đơn này?\n\n'
+          'Thông tin từ hóa đơn sẽ được chuyển thành chi tiêu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Cập nhật', style: TextStyle(color: ThemeColors.getPrimary(context))),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Gọi API để convert invoice to expense
+      await context.read<ExpenseProvider>().updateExpenseFromInvoice(
+        widget.invoice!.id,
+        user.id,
+      );
+
+      // Refresh budgets để cập nhật spentAmount
+      if (mounted) {
+        try {
+          await context.read<BudgetProvider>().fetchBudgets(user.id);
+        } catch (e) {
+          // Ignore budget refresh errors
+        }
+      }
+
+      if (mounted) {
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          '✅ Đã cập nhật chi tiêu từ hóa đơn thành công!\n'
+          'Bạn có thể xem trong mục Chi tiêu.',
+        );
+        // Có thể điều hướng đến màn hình chi tiêu nếu cần
+        // Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -635,7 +709,26 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> with SingleTickerPr
                     maxLines: 3,
                     validator: (value) => null, // Optional field
                   ),
-                  SizedBox(height: 32),
+                  SizedBox(height: 24),
+                  // Button chuyển đổi thành chi tiêu (chỉ hiện khi xem invoice)
+                  if (widget.invoice != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _convertToExpense,
+                        icon: Icon(Icons.swap_horiz),
+                        label: Text('Cập nhật chi tiêu từ hóa đơn'),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: ThemeColors.getPrimary(context), width: 2),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

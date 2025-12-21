@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/expense.dart';
 import '../providers/expense_provider.dart';
+import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/format_utils.dart';
@@ -105,6 +106,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         );
       }
 
+      // Refresh budgets để cập nhật spentAmount
+      if (mounted) {
+        try {
+          await context.read<BudgetProvider>().fetchBudgets(user.id);
+        } catch (e) {
+          // Ignore budget refresh errors
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context);
         ExceptionHandler.showSuccessSnackBar(
@@ -147,8 +157,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     if (confirm == true) {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) return;
+
       try {
         await context.read<ExpenseProvider>().deleteExpense(widget.expense!.id);
+        
+        // Refresh budgets để cập nhật spentAmount
+        if (mounted) {
+          try {
+            await context.read<BudgetProvider>().fetchBudgets(user.id);
+          } catch (e) {
+            // Ignore budget refresh errors
+          }
+        }
+
         if (mounted) {
           Navigator.pop(context);
           ExceptionHandler.showSuccessSnackBar(context, 'Xóa chi tiêu thành công');

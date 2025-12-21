@@ -478,6 +478,20 @@ class ApiService {
     }
   }
 
+  // Recalculate tất cả budgets (tính lại spentAmount)
+  Future<List<Budget>> recalculateBudgets(int userId) async {
+    try {
+      final response = await _dio.post(
+        '/budgets/recalculate',
+        queryParameters: {'userId': userId},
+      );
+      final List<dynamic> data = response.data;
+      return data.map((json) => Budget.fromJson(json)).toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // ==================== INVOICE METHODS ====================
 
   Future<List<Invoice>> getInvoices(int userId) async {

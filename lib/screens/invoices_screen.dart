@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/invoice.dart';
 import '../providers/invoice_provider.dart';
+import '../providers/expense_provider.dart';
+import '../providers/budget_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/exception_handler.dart';
 import '../utils/format_utils.dart';
 import '../utils/theme_colors.dart';
 import 'add_invoice_screen.dart';
@@ -208,6 +212,23 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
+                        const SizedBox(height: 12),
+                        // Button chuyển đổi thành chi tiêu
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _convertToExpense(invoice),
+                            icon: Icon(Icons.swap_horiz, size: 18),
+                            label: Text('Cập nhật chi tiêu'),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              side: BorderSide(color: ThemeColors.getPrimary(context)),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -244,6 +265,92 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         return 'Ví điện tử';
       default:
         return 'Khác';
+    }
+  }
+
+  /// Chuyển đổi hóa đơn thành chi tiêu
+  Future<void> _convertToExpense(Invoice invoice) async {
+    final user = context.read<AuthProvider>().user;
+    if (user == null) {
+      ExceptionHandler.showErrorSnackBar(context, 'Chưa đăng nhập');
+      return;
+    }
+
+    // Xác nhận
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cập nhật chi tiêu?'),
+        content: Text(
+          'Bạn có muốn cập nhật chi tiêu từ hóa đơn "${invoice.storeName ?? 'Hóa đơn'}"?\n\n'
+          'Thông tin từ hóa đơn sẽ được chuyển thành chi tiêu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Cập nhật', style: TextStyle(color: ThemeColors.getPrimary(context))),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // Hiển thị loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text('Đang cập nhật chi tiêu...'),
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 10),
+        ),
+      );
+
+      // Gọi API để convert invoice to expense
+      await context.read<ExpenseProvider>().updateExpenseFromInvoice(
+        invoice.id,
+        user.id,
+      );
+
+      // Refresh budgets để cập nhật spentAmount
+      if (mounted) {
+        try {
+          await context.read<BudgetProvider>().fetchBudgets(user.id);
+        } catch (e) {
+          // Ignore budget refresh errors
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ExceptionHandler.showSuccessSnackBar(
+          context,
+          '✅ Đã cập nhật chi tiêu từ hóa đơn thành công!',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ExceptionHandler.showErrorSnackBar(context, e);
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/invoice.dart';
+import '../models/expense.dart';
 import '../services/api_service.dart';
 
 class InvoiceProvider extends ChangeNotifier {
@@ -146,5 +147,26 @@ class InvoiceProvider extends ChangeNotifier {
     return _invoices.where((i) =>
         i.invoiceDate.year == month.year &&
         i.invoiceDate.month == month.month).toList();
+  }
+
+  /// Chuyển đổi hóa đơn thành chi tiêu
+  /// Returns Expense object created from invoice
+  Future<Expense> convertInvoiceToExpense(int invoiceId, int userId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final expense = await _apiService.convertInvoiceToExpense(invoiceId, userId);
+      notifyListeners();
+      return expense;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
