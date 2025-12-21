@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/user.dart';
@@ -584,9 +585,90 @@ class ApiService {
     }
   }
 
+  /// Gọi AI server trực tiếp để phân tích ảnh hóa đơn
+  /// Returns raw JSON response from AI server
+  Future<Map<String, dynamic>> callAiServer(File imageFile) async {
+    try {
+      if (kIsWeb) {
+        throw Exception('AI analysis không hỗ trợ trên web. Vui lòng sử dụng mobile app.');
+      }
+      
+      // Get file name from path
+      final fileName = imageFile.path.split('/').last;
+      
+      // Đọc bytes từ file
+      final bytes = await imageFile.readAsBytes();
+      
+      // Tạo Dio instance riêng cho AI server (không dùng baseUrl)
+      final aiDio = Dio(BaseOptions(
+        baseUrl: '',
+        connectTimeout: Duration(seconds: 30),
+        receiveTimeout: Duration(seconds: 60), // AI processing may take time
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
+      ));
+
+      final formData = FormData.fromMap({
+        'image': MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
+        ),
+      });
+
+      // Gọi AI server trực tiếp
+      final response = await aiDio.post(
+        ApiConfig.aiServerUrl,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Lỗi kết nối AI server: ${e.message}');
+      }
+      throw Exception('Lỗi phân tích ảnh: ${e.toString()}');
+    }
+  }
+
+  /// Parse kết quả từ AI server thành InvoiceData
+  Map<String, dynamic> parseAiResponse(Map<String, dynamic> aiResponse) {
+    try {
+      // AI server trả về format:
+      // {
+      //   "status": "success",
+      //   "data": {
+      //     "extraction_result": "```json\n{...}\n```"
+      //   }
+      // }
+      
+      if (aiResponse['status'] != 'success') {
+        throw Exception('AI server trả về lỗi: ${aiResponse['message'] ?? 'Unknown error'}');
+      }
+
+      final data = aiResponse['data'] as Map<String, dynamic>?;
+      if (data == null || data['extraction_result'] == null) {
+        throw Exception('AI server không trả về dữ liệu trích xuất');
+      }
+
+      // Lấy extraction_result và làm sạch (xóa markdown code block)
+      String jsonString = data['extraction_result'].toString();
+      jsonString = jsonString.replaceAll('```json', '').replaceAll('```', '').trim();
+
+      // Parse JSON string thành Map
+      final invoiceData = jsonDecode(jsonString) as Map<String, dynamic>;
+      
+      return invoiceData;
+    } catch (e) {
+      throw Exception('Lỗi parse kết quả AI: ${e.toString()}');
+    }
+  }
+
   /// Gửi ảnh đến AI server để trích xuất thông tin hóa đơn
-  /// Upload invoice image to backend
-  /// Backend will automatically call AI server to extract invoice information
+  /// Sau đó lưu hóa đơn lên backend
   /// Returns the Invoice object with extracted data
   Future<Invoice> uploadInvoice(int userId, File imageFile) async {
     try {
@@ -594,10 +676,62 @@ class ApiService {
         throw Exception('Upload file không hỗ trợ trên web. Vui lòng sử dụng mobile app.');
       }
       
-      // Get file name from path
-      final fileName = imageFile.path.split('/').last;
+      // Bước 1: Gọi AI server trực tiếp để phân tích ảnh
+      final aiResponse = await callAiServer(imageFile);
       
-      // Đọc bytes từ file
+      // Bước 2: Parse kết quả từ AI server
+      final invoiceData = parseAiResponse(aiResponse);
+      
+      // Bước 3: Map dữ liệu từ AI sang format của Invoice
+      final storeName = invoiceData['Tên người bán'] as String? ?? 'Cửa hàng';
+      final totalAmount = (invoiceData['Tổng tiền thanh toán'] as num?)?.toDouble() ?? 0.0;
+      final address = invoiceData['Địa chỉ'] as String? ?? '';
+      final dateStr = invoiceData['Ngày giao dịch'] as String? ?? '';
+      
+      // Parse ngày tháng
+      DateTime invoiceDate = DateTime.now();
+      if (dateStr.isNotEmpty) {
+        try {
+          // Xử lý format ngày: "13/08/2020" hoặc "16.01.2024 15.14"
+          String cleanDate = dateStr.trim().split(' ')[0].replaceAll('.', '/');
+          final parts = cleanDate.split('/');
+          if (parts.length == 3) {
+            invoiceDate = DateTime(
+              int.parse(parts[2]),
+              int.parse(parts[1]),
+              int.parse(parts[0]),
+            );
+          }
+        } catch (e) {
+          print('Lỗi parse ngày: $dateStr, dùng ngày hiện tại');
+        }
+      }
+      
+      // Parse items
+      final List<InvoiceItem> items = [];
+      final itemsData = invoiceData['Danh sách món'] as List<dynamic>?;
+      if (itemsData != null) {
+        for (var itemData in itemsData) {
+          final itemMap = itemData as Map<String, dynamic>;
+          final itemName = itemMap['Tên món'] as String? ?? 'Sản phẩm';
+          final unitPrice = (itemMap['Đơn giá'] as num?)?.toDouble() ?? 0.0;
+          final quantity = (itemMap['Số lượng'] as num?)?.toInt() ?? 1;
+          
+          items.add(InvoiceItem(
+            id: 0, // Sẽ được set bởi backend
+            invoiceId: 0, // Sẽ được set bởi backend
+            itemName: itemName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: unitPrice * quantity,
+          ));
+        }
+      }
+      
+      // Bước 4: Upload ảnh lên backend để lưu
+      // Backend sẽ tự động gọi AI server và lưu kết quả
+      // (App đã gọi AI server trước để có thể hiển thị kết quả ngay)
+      final fileName = imageFile.path.split('/').last;
       final bytes = await imageFile.readAsBytes();
       
       final formData = FormData.fromMap({
@@ -608,6 +742,7 @@ class ApiService {
         ),
       });
 
+      // Gửi lên backend để lưu (backend sẽ tự gọi AI server)
       final response = await _dio.post(
         '/invoices/upload',
         data: formData,
