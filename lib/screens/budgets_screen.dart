@@ -245,6 +245,31 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
+                  SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddBudgetScreen(),
+                        ),
+                      ).then((_) {
+                        // Reload budgets after adding
+                        final user = context.read<AuthProvider>().user;
+                        if (user != null) {
+                          context.read<BudgetProvider>().fetchBudgets(user.id);
+                        }
+                      });
+                    },
+                    icon: Icon(Icons.add),
+                    label: Text('Thêm ngân sách'),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -327,6 +352,24 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddBudgetScreen(),
+            ),
+          ).then((_) {
+            // Reload budgets after adding/editing
+            final user = context.read<AuthProvider>().user;
+            if (user != null) {
+              context.read<BudgetProvider>().fetchBudgets(user.id);
+            }
+          });
+        },
+        child: Icon(Icons.add),
+        tooltip: 'Thêm ngân sách',
       ),
     );
   }
